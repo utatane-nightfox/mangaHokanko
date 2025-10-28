@@ -158,7 +158,7 @@ export default function MangaHokanko() {
       )}
 
       {view === "register" && (
-        <RegisterForm user={user} onDone={() => { fetchList(); setView("main"); }} />
+        <RegisterForm user={user} onDone={() => { fetchList()}} />
       )}
 
       {view === "fav" && (
@@ -330,12 +330,12 @@ function MainView({
 function RegisterForm({ user, onDone }) {
   const [title, setTitle] = useState("");
   const [episode, setEpisode] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   const handleAdd = async () => {
     if (!title.trim()) return alert("タイトルを入力してください");
 
-    setLoading(true);
+    setSaving(true);
 
     // 🔍 重複チェック
     const { data: existing } = await supabase
@@ -346,7 +346,7 @@ function RegisterForm({ user, onDone }) {
 
     if (existing && existing.length > 0) {
       alert("すでに登録済みです");
-      setLoading(false);
+      setSaving(false);
       return;
     }
 
@@ -367,23 +367,21 @@ function RegisterForm({ user, onDone }) {
       alert("登録しました！🎉");
       setTitle("");
       setEpisode("");
-      onDone(); // リスト更新のみ
+      // ✅ 一覧画面に戻らず、入力フォームを維持
     }
 
-    setLoading(false);
+    setSaving(false);
   };
 
   return (
     <div className="w-full max-w-lg bg-white rounded-3xl shadow-2xl p-6 border border-green-100">
       <h2 className="text-2xl font-bold text-green-600 mb-4">新しい作品を登録</h2>
-
       <div className="flex flex-col gap-4">
         <input
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           placeholder="タイトル"
           className="px-4 py-2 border rounded-xl text-lg"
-          disabled={loading}
         />
         <input
           value={episode}
@@ -391,29 +389,24 @@ function RegisterForm({ user, onDone }) {
           placeholder="話数（数字）"
           type="number"
           className="px-4 py-2 border rounded-xl text-lg"
-          disabled={loading}
         />
-
         <button
           onClick={handleAdd}
-          disabled={loading}
+          disabled={saving}
           className={`px-6 py-2 rounded-full text-white transition ${
-            loading ? "bg-gray-400" : "bg-green-500 hover:bg-green-600"
+            saving ? "bg-gray-400" : "bg-green-500 hover:bg-green-600"
           }`}
         >
-          {loading ? "登録中..." : "登録する"}
+          {saving ? "登録中..." : "登録する"}
         </button>
-
-        <button
-          onClick={onDone}
-          className="text-gray-500 hover:underline mt-2"
-        >
-          📋 登録済み一覧を見る
+        <button onClick={onDone} className="text-gray-500 hover:underline mt-2">
+          ← 一覧に戻る
         </button>
       </div>
     </div>
   );
 }
+
 
 
 
