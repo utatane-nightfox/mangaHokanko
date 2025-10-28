@@ -325,58 +325,65 @@ function MainView({
 }
 
 /* =======================
-   登録フォーム
+   登録フォーム（連続登録対応版）
 ======================= */
 function RegisterForm({ user, onDone }) {
   const [title, setTitle] = useState("");
   const [episode, setEpisode] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const handleAdd = async () => {
-  if (!title.trim()) return alert("タイトルを入力してください");
+    if (!title.trim()) return alert("タイトルを入力してください");
 
-  // 🔍 重複チェック
-  const { data: existing } = await supabase
-    .from("mangaHokanko")
-    .select("id")
-    .eq("title", title.trim())
-    .eq("user_id", user.id);
+    setLoading(true);
 
-  if (existing && existing.length > 0) {
-    alert("すでに登録済みです");
-    return;
-  }
+    // 🔍 重複チェック
+    const { data: existing } = await supabase
+      .from("mangaHokanko")
+      .select("id")
+      .eq("title", title.trim())
+      .eq("user_id", user.id);
 
-  const ep = parseInt(episode, 10) || 0;
-  const { error } = await supabase.from("mangaHokanko").insert([
-    {
-      title: title.trim(),
-      episode: ep,
-      favorite: false,
-      user_id: user.id,
-    },
-  ]);
+    if (existing && existing.length > 0) {
+      alert("すでに登録済みです");
+      setLoading(false);
+      return;
+    }
 
-  if (error) {
-    console.error("insert error:", error);
-    alert("登録できませんでした");
-  } else {
-    alert("登録しました！🎉");
-    setTitle("");
-    setEpisode("");
-    // ✅ onDone()を削除して、画面をリセットのみ
-  }
-};
+    const ep = parseInt(episode, 10) || 0;
+    const { error } = await supabase.from("mangaHokanko").insert([
+      {
+        title: title.trim(),
+        episode: ep,
+        favorite: false,
+        user_id: user.id,
+      },
+    ]);
 
+    if (error) {
+      console.error("insert error:", error);
+      alert("登録できませんでした");
+    } else {
+      alert("登録しました！🎉");
+      setTitle("");
+      setEpisode("");
+      onDone(); // リスト更新のみ
+    }
+
+    setLoading(false);
+  };
 
   return (
     <div className="w-full max-w-lg bg-white rounded-3xl shadow-2xl p-6 border border-green-100">
       <h2 className="text-2xl font-bold text-green-600 mb-4">新しい作品を登録</h2>
+
       <div className="flex flex-col gap-4">
         <input
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           placeholder="タイトル"
           className="px-4 py-2 border rounded-xl text-lg"
+          disabled={loading}
         />
         <input
           value={episode}
@@ -384,20 +391,31 @@ function RegisterForm({ user, onDone }) {
           placeholder="話数（数字）"
           type="number"
           className="px-4 py-2 border rounded-xl text-lg"
+          disabled={loading}
         />
+
         <button
           onClick={handleAdd}
-          className="px-6 py-2 rounded-full bg-green-500 text-white hover:bg-green-600 transition"
+          disabled={loading}
+          className={`px-6 py-2 rounded-full text-white transition ${
+            loading ? "bg-gray-400" : "bg-green-500 hover:bg-green-600"
+          }`}
         >
-          登録する
+          {loading ? "登録中..." : "登録する"}
         </button>
-        <button onClick={onDone} className="text-gray-500 hover:underline mt-2">
-          ← 戻る
+
+        <button
+          onClick={onDone}
+          className="text-gray-500 hover:underline mt-2"
+        >
+          📋 登録済み一覧を見る
         </button>
       </div>
     </div>
   );
 }
+
+
 
 /* =======================
    シンプル棒グラフ
