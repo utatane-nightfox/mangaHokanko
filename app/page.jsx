@@ -157,9 +157,10 @@ export default function MangaHokanko() {
         />
       )}
 
-      {view === "register" && (
-        <RegisterForm user={user} onDone={() => { fetchList()}} />
-      )}
+     {view === "register" && (
+  <RegisterForm user={user} onDone={fetchList} />
+)}
+
 
       {view === "fav" && (
         <MainView
