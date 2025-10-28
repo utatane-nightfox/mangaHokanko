@@ -332,40 +332,41 @@ function RegisterForm({ user, onDone }) {
   const [episode, setEpisode] = useState("");
 
   const handleAdd = async () => {
-    if (!title.trim()) return alert("タイトルを入力してください");
+  if (!title.trim()) return alert("タイトルを入力してください");
 
-    // 🔍 重複チェック
-    const { data: existing } = await supabase
-      .from("mangaHokanko")
-      .select("id")
-      .eq("title", title.trim())
-      .eq("user_id", user.id);
+  // 🔍 重複チェック
+  const { data: existing } = await supabase
+    .from("mangaHokanko")
+    .select("id")
+    .eq("title", title.trim())
+    .eq("user_id", user.id);
 
-    if (existing && existing.length > 0) {
-      alert("すでに登録済みです");
-      return;
-    }
+  if (existing && existing.length > 0) {
+    alert("すでに登録済みです");
+    return;
+  }
 
-    const ep = parseInt(episode, 10) || 0;
-    const { error } = await supabase.from("mangaHokanko").insert([
-      {
-        title: title.trim(),
-        episode: ep,
-        favorite: false,
-        user_id: user.id,
-      },
-    ]);
+  const ep = parseInt(episode, 10) || 0;
+  const { error } = await supabase.from("mangaHokanko").insert([
+    {
+      title: title.trim(),
+      episode: ep,
+      favorite: false,
+      user_id: user.id,
+    },
+  ]);
 
-    if (error) {
-      console.error("insert error:", error);
-      alert("登録できませんでした");
-    } else {
-      alert("登録しました！");
-      setTitle("");
-      setEpisode("");
-      onDone();
-    }
-  };
+  if (error) {
+    console.error("insert error:", error);
+    alert("登録できませんでした");
+  } else {
+    alert("登録しました！🎉");
+    setTitle("");
+    setEpisode("");
+    // ✅ onDone()を削除して、画面をリセットのみ
+  }
+};
+
 
   return (
     <div className="w-full max-w-lg bg-white rounded-3xl shadow-2xl p-6 border border-green-100">
