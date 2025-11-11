@@ -36,3 +36,28 @@ body {
 .table-card th, .table-card td {
   vertical-align: middle;
 }
+
+@keyframes glow {
+  0%, 100% { box-shadow: 0 0 5px #fff, 0 0 20px currentColor; }
+  50% { box-shadow: 0 0 15px #fff, 0 0 30px currentColor; }
+}
+
+@keyframes flicker {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.animate-glow { animation: glow 1.5s ease-in-out infinite alternate; }
+.animate-glow-slow { animation: glow 3s ease-in-out infinite alternate; }
+.animate-flicker { animation: flicker 1s infinite; }
+.animate-flicker-slow { animation: flicker 2s infinite; }
+.animate-spin-slow { animation: spin-slow 5s linear infinite; }
+.animate-blink { animation: flicker 0.5s infinite alternate; }
+.animate-blink-slow { animation: flicker 1.5s infinite alternate; }
+.animate-glow-fast { animation: glow 0.7s ease-in-out infinite alternate; }
+/* 好みに合わせて他アニメも追加可 */

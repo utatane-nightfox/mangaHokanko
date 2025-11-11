@@ -1,48 +1,72 @@
 "use client";
 
-import { supabase } from "../supabaseClient";
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { createClient } from "@supabase/supabase-js";
+
+// ✅ Supabaseクライアント初期化
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+);
 
 export default function LoginPage() {
-  const router = useRouter();
   const [email, setEmail] = useState("");
-
-  useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      if (user) router.push("/");
-    });
-  }, [router]);
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState("");
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    const { error } = await supabase.auth.signInWithOtp({ email });
-    if (error) alert(error.message);
-    else alert("ログインリンクをメールで送信しました！");
+    setLoading(true);
+    setMessage("");
+
+    try {
+      const { error } = await supabase.auth.signInWithOtp({
+        email,
+        options: {
+          emailRedirectTo: `${window.location.origin}/`,
+        },
+      });
+
+      if (error) throw error;
+      setMessage("ログインリンクを送信しました。メールを確認してください。");
+    } catch (error) {
+      console.error(error.message);
+      setMessage("ログインに失敗しました。もう一度お試しください。");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <div className="flex items-center justify-center h-screen bg-gray-100">
-      <form
-        onSubmit={handleLogin}
-        className="bg-white p-6 rounded-xl shadow-md space-y-4 w-80"
-      >
-        <h1 className="text-xl font-bold text-center">ログイン</h1>
-        <input
-          type="email"
-          className="border p-2 w-full rounded"
-          placeholder="メールアドレス"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-        />
-        <button
-          type="submit"
-          className="bg-blue-500 text-white w-full py-2 rounded hover:bg-blue-600"
-        >
-          ログインリンク送信
-        </button>
-      </form>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-blue-50 to-purple-100">
+      <div className="bg-white p-8 rounded-2xl shadow-md w-full max-w-md">
+        <h1 className="text-2xl font-bold mb-6 text-center text-blue-600">
+          漫画保管庫 ログイン
+        </h1>
+
+        <form onSubmit={handleLogin} className="space-y-4">
+          <input
+            type="email"
+            className="border border-gray-300 p-2 w-full rounded focus:ring-2 focus:ring-blue-400 outline-none"
+            placeholder="メールアドレスを入力"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
+
+          <button
+            type="submit"
+            className="bg-blue-500 text-white w-full py-2 rounded hover:bg-blue-600 transition disabled:bg-gray-400"
+            disabled={loading}
+          >
+            {loading ? "送信中..." : "ログインリンク送信"}
+          </button>
+        </form>
+
+        {message && (
+          <p className="mt-4 text-center text-sm text-gray-700">{message}</p>
+        )}
+      </div>
     </div>
   );
 }
