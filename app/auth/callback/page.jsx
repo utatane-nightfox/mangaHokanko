@@ -5,7 +5,7 @@ export const revalidate = 0;
 
 import { useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { supabase } from "@/app/supabaseClient";
+import { supabase } from "@/supabaseClient";
 
 export default function AuthCallback() {
   const router = useRouter();
