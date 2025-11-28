@@ -1,38 +1,35 @@
 "use client";
+
+export const dynamic = "force-dynamic"; // ← これ必須！SSRされなくなる
+export const revalidate = 0;
+
 import { useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { supabase } from "@/supabaseClient";
+import { supabase } from "@/app/supabaseClient";
 
 export default function AuthCallback() {
   const router = useRouter();
-  const searchParams = useSearchParams();
+  const searchParams = useSearchParams(); // ← これでエラー出なくなる
 
   useEffect(() => {
-    const handleAuth = async () => {
-      // URL に含まれている code を取得（Supabaseが送ってくる）
-      const code = searchParams.get("code");
-
-      if (!code) {
-        console.error("No auth code found");
-        router.push("/login");
-        return;
-      }
-
-      /// 🔥 ここが一番重要！ code をセッションに交換する
-      const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+    const handleSession = async () => {
+      const { data, error } = await supabase.auth.getSession();
 
       if (error) {
-        console.error("Auth error:", error);
-        router.push("/login");
+        console.error(error);
+        router.replace("/login");
         return;
       }
 
-      // ログイン成功
-      router.push("/");
+      if (data.session) {
+        router.replace("/");
+      } else {
+        router.replace("/login");
+      }
     };
 
-    handleAuth();
-  }, [router, searchParams]);
+    handleSession();
+  }, [router]);
 
   return (
     <div className="flex items-center justify-center min-h-screen">
