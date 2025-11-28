@@ -1,18 +1,17 @@
 "use client";
 
 import { useEffect } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { supabase } from "@/supabaseClient";
 
-export const dynamic = "force-dynamic"; // 🔥 これ必須：SSR を完全無効化
+export const dynamic = "force-dynamic"; // ← これが超重要！！
 
 export default function AuthCallback() {
   const router = useRouter();
-  const params = useSearchParams(); // 🔥 SuspenseなしでCSRにするために use client が必須
 
   useEffect(() => {
     const handleSession = async () => {
-      // Supabase が URL のトークンを処理して session を復元する
+      // Supabase が URL のトークンを処理
       const { data, error } = await supabase.auth.getSession();
 
       if (error) {
@@ -21,7 +20,8 @@ export default function AuthCallback() {
         return;
       }
 
-      if (data.session) {
+      const session = data.session;
+      if (session) {
         router.push("/");
       } else {
         router.push("/login");
@@ -29,7 +29,7 @@ export default function AuthCallback() {
     };
 
     handleSession();
-  }, [router, params]);
+  }, [router]);
 
   return (
     <div className="flex items-center justify-center min-h-screen">
@@ -37,4 +37,3 @@ export default function AuthCallback() {
     </div>
   );
 }
-
