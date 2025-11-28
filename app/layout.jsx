@@ -1,15 +1,11 @@
 "use client";
 
 import "./globals.css";
-import { createClient } from "@supabase/supabase-js";
+import { supabase } from "@/app/supabaseClient";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import "@/app/lib/frameStyles.css";
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-);
 
 export default function RootLayout({ children }) {
   const router = useRouter();
