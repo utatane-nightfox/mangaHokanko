@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/supabaseClient";
 import { useRouter } from "next/navigation";
-import '@/lib/frameStyles.css';
+import '../lib/frameStyles.css';
 
 export default function ProfilePage() {
   const router = useRouter();
