@@ -4,8 +4,7 @@ import "./globals.css";
 import { supabase } from "@/supabaseClient";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import './lib/frameStyles.css';
-
+import '@/lib/frameStyles.css';
 
 export default function RootLayout({ children }) {
   const router = useRouter();
