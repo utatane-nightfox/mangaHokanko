@@ -1,7 +1,7 @@
 "use client";
 
 import "./globals.css";
-import { supabase } from "@/app/supabaseClient";
+import { supabase } from "@/supabaseClient";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import '../lib/frameStyles.css';
