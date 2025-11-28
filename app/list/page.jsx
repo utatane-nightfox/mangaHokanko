@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
-import { supabase } from "@/supabaseClient";
+import { supabase } from "@/app/supabaseClient";
+
 
 
 import { FaStar, FaRegStar, FaTrash, FaEdit } from 'react-icons/fa'

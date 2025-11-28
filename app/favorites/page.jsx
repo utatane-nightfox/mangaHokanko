@@ -1,7 +1,8 @@
 // app/favorites/page.jsx
 "use client";
 import { useEffect, useState } from "react";
-import { supabase } from "@/supabaseClient";
+import { supabase } from "@/app/supabaseClient";
+
 
 export default function FavoritesPage() {
   const [favorites, setFavorites] = useState([]);
