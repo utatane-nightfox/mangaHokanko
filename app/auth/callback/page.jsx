@@ -1,39 +1,27 @@
 "use client";
-
 import { useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/supabaseClient";
 
-export const dynamic = "force-dynamic"; // ← これが超重要！！
+export const dynamic = "force-dynamic";
 
 export default function AuthCallback() {
   const router = useRouter();
+  const params = useSearchParams();
 
   useEffect(() => {
-    const handleSession = async () => {
-      // Supabase が URL のトークンを処理
-      const { data, error } = await supabase.auth.getSession();
-
+    const handleLogin = async () => {
+      const { error } = await supabase.auth.getSessionFromUrl({ storeSession: true });
       if (error) {
-        console.error(error);
-        router.push("/login");
+        console.error("Auth callback error:", error);
+        router.replace("/login");
         return;
       }
-
-      const session = data.session;
-      if (session) {
-        router.push("/");
-      } else {
-        router.push("/login");
-      }
+      router.replace("/");
     };
 
-    handleSession();
-  }, [router]);
+    handleLogin();
+  }, [router, params]);
 
-  return (
-    <div className="flex items-center justify-center min-h-screen">
-      <p>認証中です…</p>
-    </div>
-  );
+  return <p>認証中 ...</p>;
 }
