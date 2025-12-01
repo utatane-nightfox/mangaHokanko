@@ -1,27 +1,42 @@
 "use client";
-import { useEffect } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import { supabase } from "@/supabaseClient";
 
-export const dynamic = "force-dynamic";
+export const dynamic = "force-dynamic"; // ← 必須：SSR/SSGを無効化
+export const runtime = "edge";          // ← Vercel でURL token処理が安定
+export const revalidate = 0;            // ← 静的化を完全拒否
+
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { supabase } from "@/supabaseClient";
 
 export default function AuthCallback() {
   const router = useRouter();
-  const params = useSearchParams();
 
   useEffect(() => {
-    const handleLogin = async () => {
-      const { error } = await supabase.auth.getSessionFromUrl({ storeSession: true });
+    const handleSession = async () => {
+      // URL の token fragment(#access_token=...) を Supabase が処理
+      const { data, error } = await supabase.auth.getSession();
+
       if (error) {
-        console.error("Auth callback error:", error);
-        router.replace("/login");
+        console.error("Session error:", error);
+        router.push("/login");
         return;
       }
-      router.replace("/");
+
+      const session = data.session;
+
+      if (session) {
+        router.push("/"); 
+      } else {
+        router.push("/login");
+      }
     };
 
-    handleLogin();
-  }, [router, params]);
+    handleSession();
+  }, [router]);
 
-  return <p>認証中 ...</p>;
+  return (
+    <div className="flex items-center justify-center min-h-screen">
+      <p>認証中です…</p>
+    </div>
+  );
 }
