@@ -54,7 +54,7 @@ export default function ProfilePage() {
 
       const { data: profile, error } = await supabase
         .from("profiles")
-        .select("nickname, icon_frame, title, total_chapters, total_registered, profile_image_url")
+        .select("nickname, icon_frame, current_title, total_chapters, total_registered, avatar_url")
         .eq("id", user.id)
         .single();
 
@@ -66,8 +66,8 @@ export default function ProfilePage() {
 
       setNickname(profile.nickname || "");
       setIconFrame(profile.icon_frame || "none");
-      setTitle(profile.title || "");
-      setProfileImage(profile.profile_image_url || null);
+      setTitle(profile.current_title);
+      setProfileImage(profile.avatar_url);
 
       // 獲得称号
       const titles = [];

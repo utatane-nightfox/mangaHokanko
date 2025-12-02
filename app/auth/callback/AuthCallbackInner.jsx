@@ -4,17 +4,26 @@ import { useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/supabaseClient";
 
-export default function AuthCallbackInner() {
+export default function AuthCallback() {
   const router = useRouter();
   const params = useSearchParams();
 
   useEffect(() => {
     const handleSession = async () => {
-      await supabase.auth.exchangeCodeForSession(params);
+      const code = params.get("code");
+      if (!code) {
+        router.push("/login");
+        return;
+      }
 
-      const { data: { session } } = await supabase.auth.getSession();
+      const { error } = await supabase.auth.exchangeCodeForSession(code);
+      if (error) {
+        console.error(error);
+        router.push("/login");
+        return;
+      }
 
-      router.push(session ? "/" : "/login");
+      router.push("/");
     };
 
     handleSession();

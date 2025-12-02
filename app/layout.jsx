@@ -52,7 +52,7 @@ export default function RootLayout({ children }) {
 
     const { data: profile } = await supabase
       .from("profiles")
-      .select("nickname, icon_frame, total_chapters, total_manga, title")
+      .select("nickname, icon_frame, total_chapters, total_registered, current_title")
       .eq("id", user.id)
       .single();
 
