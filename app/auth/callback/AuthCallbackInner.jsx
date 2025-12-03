@@ -4,12 +4,12 @@ import { useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/supabaseClient";
 
-export default function AuthCallback() {
+export default function AuthCallbackInner() {
   const router = useRouter();
   const params = useSearchParams();
 
   useEffect(() => {
-    const handleSession = async () => {
+    const run = async () => {
       const code = params.get("code");
       if (!code) {
         router.push("/login");
@@ -17,8 +17,9 @@ export default function AuthCallback() {
       }
 
       const { error } = await supabase.auth.exchangeCodeForSession(code);
+
       if (error) {
-        console.error(error);
+        console.error("exchangeCodeForSession error:", error);
         router.push("/login");
         return;
       }
@@ -26,7 +27,7 @@ export default function AuthCallback() {
       router.push("/");
     };
 
-    handleSession();
+    run();
   }, [params, router]);
 
   return <p>認証中...</p>;

@@ -3,7 +3,7 @@
 import { Suspense } from "react";
 import AuthCallbackInner from "./AuthCallbackInner";
 
-export const dynamic = "force-dynamic"; // ← 必須
+export const dynamic = "force-dynamic";
 
 export default function Page() {
   return (
