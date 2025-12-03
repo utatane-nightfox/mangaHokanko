@@ -67,7 +67,7 @@ export default function ProfilePage() {
       setNickname(profile.nickname || "");
       setIconFrame(profile.icon_frame || "none");
       setTitle(profile.current_title);
-      setProfileImage(profile.avatar_url);
+      setProfileImage(profile.avatar_url || null);
 
       // 獲得称号
       const titles = [];

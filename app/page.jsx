@@ -1,12 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { createClient } from "@supabase/supabase-js";
+import { supabase } from "@/supabaseClient";
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-);
 
 export default function HomePage() {
   const [profile, setProfile] = useState(null);
@@ -16,7 +12,7 @@ export default function HomePage() {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        // ログインチェック
+        // 🔐 セッション確認
         const {
           data: { session },
         } = await supabase.auth.getSession();
@@ -28,7 +24,7 @@ export default function HomePage() {
 
         const token = session.access_token;
 
-        // Edge Function 呼び出し
+        // 🧩 Edge Function を呼び出し
         const res = await fetch(
           `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/get-or-create-profile`,
           {
@@ -39,6 +35,7 @@ export default function HomePage() {
         );
 
         if (!res.ok) throw new Error("取得失敗");
+
         const data = await res.json();
         setProfile(data);
       } catch (err) {
@@ -71,16 +68,24 @@ export default function HomePage() {
       {/* プロフィール */}
       <section className="bg-white shadow-md rounded-2xl p-6 mb-8">
         <div className="flex items-center gap-4">
-          <div className={`relative w-16 h-16 flex items-center justify-center border-2 rounded-full ${icon_frame}`}>
+          <div
+            className={`relative w-16 h-16 flex items-center justify-center border-2 rounded-full ${icon_frame}`}
+          >
             {avatar_url ? (
-              <img src={avatar_url} alt="avatar" className="w-full h-full object-cover rounded-full" />
+              <img
+                src={avatar_url}
+                alt="avatar"
+                className="w-full h-full object-cover rounded-full"
+              />
             ) : (
               <span className="text-2xl">👤</span>
             )}
           </div>
           <div>
             <h2 className="text-xl font-bold">{nickname || "名無しの読書家"}</h2>
-            <p className="text-gray-500">現在の称号：{current_title || "なし"}</p>
+            <p className="text-gray-500">
+              現在の称号：{current_title || "なし"}
+            </p>
           </div>
         </div>
       </section>
@@ -90,11 +95,15 @@ export default function HomePage() {
         <h3 className="text-lg font-semibold mb-4">📚 現在の進捗</h3>
         <div className="grid grid-cols-2 gap-6 text-center">
           <div>
-            <p className="text-3xl font-bold text-blue-600">{total_chapters || 0}</p>
+            <p className="text-3xl font-bold text-blue-600">
+              {total_chapters || 0}
+            </p>
             <p className="text-gray-500">合計話数</p>
           </div>
           <div>
-            <p className="text-3xl font-bold text-green-600">{total_registered || 0}</p>
+            <p className="text-3xl font-bold text-green-600">
+              {total_registered || 0}
+            </p>
             <p className="text-gray-500">合計登録数</p>
           </div>
         </div>
@@ -106,7 +115,10 @@ export default function HomePage() {
         {title_unlocked.length > 0 ? (
           <ul className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
             {title_unlocked.map((title, idx) => (
-              <li key={idx} className="bg-gray-100 border rounded-lg px-3 py-2 text-center hover:bg-yellow-50 transition">
+              <li
+                key={idx}
+                className="bg-gray-100 border rounded-lg px-3 py-2 text-center hover:bg-yellow-50 transition"
+              >
                 {title}
               </li>
             ))}
