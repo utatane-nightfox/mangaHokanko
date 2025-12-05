@@ -8,6 +8,6 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     persistSession: true,        // OK
     autoRefreshToken: true,      // OK
-    detectSessionInUrl: false,   // ⛔ ここ重要
+    detectSessionInUrl: true,   // ⛔ ここ重要
   },
 });
