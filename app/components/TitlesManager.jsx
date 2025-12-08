@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { supabase } from "@/supabaseClient"; // ★必須★ supabase の取得
+import { supabase } from "@/utils/supabaseClient"; // ★必須★ supabase の取得
 
 const TITLE_DEFINITIONS = [
   { id: "chapters_100", label: "見習い読書家", desc: "合計話数 100", type: "chapters", threshold: 100 },
