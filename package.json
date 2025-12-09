@@ -12,6 +12,7 @@
     "node": "20.x"
   },
   "dependencies": {
+    "@supabase/ssr": "^0.8.0",
     "@supabase/supabase-js": "^2.76.1",
     "firebase": "^12.1.0",
     "next": "^16.0.7",
