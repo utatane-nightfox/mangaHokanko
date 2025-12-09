@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { createServerSupabase } from "@/utils/supabase/server";
-const supabase = createBrowserSupabase();
+import { supabaseBrowser } from "@/utils/supabase/client"; // ← これだけでOK
+const supabase = supabaseBrowser;
 import { useRouter } from "next/navigation";
 import "@/lib/frameStyles.css";
 
