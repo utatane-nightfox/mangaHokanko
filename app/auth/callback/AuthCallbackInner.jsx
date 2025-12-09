@@ -1,8 +1,7 @@
 "use client";
-
 import { useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { supabase } from "@/utils/supabaseBrowserClient";
+import { supabaseBrowser } from "@/utils/supabase/client";
 
 export default function AuthCallbackInner() {
   const router = useRouter();
@@ -11,22 +10,16 @@ export default function AuthCallbackInner() {
   useEffect(() => {
     const run = async () => {
       const code = params.get("code");
-      if (!code) {
-        router.push("/login");
-        return;
-      }
+      if (!code) return router.push("/login");
 
-      const { error } = await supabase.auth.exchangeCodeForSession(code);
-
+      const { error } = await supabaseBrowser.auth.exchangeCodeForSession(code);
       if (error) {
-        console.error("exchangeCodeForSession error:", error);
-        router.push("/login");
-        return;
+        console.error(error);
+        return router.push("/login");
       }
 
       router.push("/");
     };
-
     run();
   }, [params, router]);
 
