@@ -116,7 +116,7 @@ export default function ProfilePage() {
 
       const { error: dbErr } = await supabase
         .from("profiles")
-        .update({ profile_image_url: imageUrl })
+        .update({ avatar_url: imageUrl })
         .eq("id", userId);
 
       if (dbErr) throw dbErr;
