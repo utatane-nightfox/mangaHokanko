@@ -1,11 +1,10 @@
 "use client";
 
 import "./globals.css";
+import '../lib/frameStyles.css';
 import { supabase } from "@/utils/supabaseClient";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import '../lib/frameStyles.css';
-
 
 
 export default function RootLayout({ children }) {

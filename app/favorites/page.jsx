@@ -2,6 +2,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { supabase } from "@/utils/supabaseClient";
+import { FaStar, FaRegStar, FaTrash, FaEdit } from "react-icons/fa";
 
 
 export default function FavoritesPage() {
