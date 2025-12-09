@@ -2,7 +2,8 @@
 
 import "./globals.css";
 import '../lib/frameStyles.css';
-import { createServerSupabase } from "@/utils/supabaseServer";
+import { createServerSupabase } from "@/utils/supabase/server";
+
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 

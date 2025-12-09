@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { supabase } from "@/utils/supabaseBrowser";
+import { supabaseBrowser as supabase } from "@/utils/supabase/client";
 const supabase = createBrowserSupabase();
 
 

@@ -1,7 +1,8 @@
 "use client";
 import { useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { createServerSupabase } from "@/utils/supabaseServer";
+import { createServerSupabase } from "@/utils/supabase/server";
+
 const supabase = createBrowserSupabase();
 
 

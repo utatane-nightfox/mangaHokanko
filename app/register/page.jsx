@@ -1,7 +1,7 @@
 // app/register/page.jsx
 "use client";
 import { useState } from "react";
-import { supabase } from "@/utils/supabaseBrowser";
+import { createServerSupabase } from "@/utils/supabase/server";
 
 
 export default function RegisterPage() {
