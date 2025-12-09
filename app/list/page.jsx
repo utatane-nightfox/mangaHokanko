@@ -13,7 +13,7 @@ export default function ListPage() {
   // データ取得
   const fetchData = async () => {
     const { data, error } = await supabase
-      .from('manga_list')
+     .from('mangaHokanko')
       .select('*')
       .order(sortType, { ascending: sortType === 'title' })
 
@@ -28,7 +28,7 @@ export default function ListPage() {
   // お気に入り切り替え
   const toggleFavorite = async (id, currentValue) => {
     const { error } = await supabase
-      .from('manga_list')
+     .from('mangaHokanko')
       .update({ favorite: !currentValue })
       .eq('id', id)
 
@@ -39,7 +39,7 @@ export default function ListPage() {
   // 話数編集
   const editEpisode = async (id, newValue) => {
     const { error } = await supabase
-      .from('manga_list')
+     .from('mangaHokanko')
       .update({ episode: parseInt(newValue, 10) })
       .eq('id', id)
     if (error) console.error(error)

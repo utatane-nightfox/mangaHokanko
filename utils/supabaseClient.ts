@@ -1,4 +1,4 @@
-// utils/supabaseClient.ts
+"use client";
 import { createClient } from "@supabase/supabase-js";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -8,6 +8,6 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     persistSession: true,
     autoRefreshToken: true,
-    detectSessionInUrl: true,  // ← ここ必要（callback URL の処理）
+    detectSessionInUrl: true,
   },
 });
