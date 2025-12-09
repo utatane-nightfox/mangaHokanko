@@ -1,7 +1,7 @@
 // app/favorites/page.jsx
 "use client";
 import { useEffect, useState } from "react";
-import { supabase } from "@/utils/supabaseClient";
+import { supabase } from "@/utils/supabaseBrowser";
 import { FaStar, FaRegStar, FaTrash, FaEdit } from "react-icons/fa";
 
 
