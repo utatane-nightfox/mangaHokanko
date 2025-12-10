@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabaseBrowser } from "@/utils/supabase/client";
 
-const supabase = supabaseBrowser;
+const supabase = supabaseBrowser();
 
 export default function UserHeader() {
   const router = useRouter();
@@ -19,10 +19,9 @@ export default function UserHeader() {
   const [showTitlePopup, setShowTitlePopup] = useState(null);
   const [userId, setUserId] = useState(null);
 
-  // ---------------------------------------------------------
-  // ここに RootLayout に書いていた関数をそのまま移動
-  // ---------------------------------------------------------
-
+  // ------------------------
+  // 称号ロジック
+  // ------------------------
   const getReadingTitle = (chapters) => {
     if (chapters >= 100000) return "伝導者";
     if (chapters >= 10000) return "プロ読書家";
@@ -40,17 +39,21 @@ export default function UserHeader() {
     return null;
   };
 
+  // ------------------------
+  // ユーザー読込
+  // ------------------------
   const loadUser = async () => {
-    const { data } = await supabase.auth.getSession();
-    if (!data.session) return; // RootLayout 上での redirect をやめる
+    const { data: { session } } = await supabase.auth.getSession();
 
-    const user = data.session.user;
+    if (!session) return;
+
+    const user = session.user;
     setUserEmail(user.email);
     setUserId(user.id);
 
     const { data: profile } = await supabase
       .from("profiles")
-      .select("nickname, icon_frame, total_chapters, total_manga, title")
+      .select("nickname, icon_frame, total_chapters, total_registered, title")
       .eq("id", user.id)
       .single();
 
@@ -58,16 +61,16 @@ export default function UserHeader() {
       setNickname(profile.nickname);
       setIconFrame(profile.icon_frame || "none");
       setTotalChapters(profile.total_chapters || 0);
-      setTotalManga(profile.total_manga || 0);
+      setTotalManga(profile.total_registered || 0);
       setTitle(profile.title || null);
 
       // 称号チェック
       const newReadingTitle = getReadingTitle(profile.total_chapters);
-      const newResearchTitle = getResearchTitle(profile.total_manga);
+      const newResearchTitle = getResearchTitle(profile.total_registered);
 
       let newTitle = null;
 
-      if (profile.total_chapters >= 100000 && profile.total_manga >= 1000) {
+      if (profile.total_chapters >= 100000 && profile.total_registered >= 1000) {
         newTitle = "漫画王";
       } else if (newReadingTitle) {
         newTitle = newReadingTitle;
@@ -75,6 +78,7 @@ export default function UserHeader() {
         newTitle = newResearchTitle;
       }
 
+      // 称号更新がある場合のみ
       if (newTitle && newTitle !== profile.title) {
         await supabase
           .from("profiles")
@@ -88,11 +92,12 @@ export default function UserHeader() {
     }
   };
 
+  // 初回ロード
   useEffect(() => {
     loadUser();
   }, []);
 
-  // リアルタイム
+  // リアルタイム反映
   useEffect(() => {
     if (!userId) return;
 
@@ -120,10 +125,9 @@ export default function UserHeader() {
     router.push("/login");
   };
 
-  // ---------------------------------------------------------
-  // ここから UI（あなたのまま）
-  // ---------------------------------------------------------
-
+  // ------------------------
+  // UI
+  // ------------------------
   return (
     <>
       <header className="fixed top-0 right-0 bg-white shadow-md p-3 rounded-bl-2xl flex items-center gap-3 z-50">
@@ -167,7 +171,6 @@ export default function UserHeader() {
         </div>
       </header>
 
-      {/* 称号ポップアップ */}
       {showTitlePopup && (
         <div className="fixed bottom-5 right-5 bg-blue-600 text-white px-4 py-3 rounded-lg shadow-lg animate-bounce z-50">
           {showTitlePopup}
