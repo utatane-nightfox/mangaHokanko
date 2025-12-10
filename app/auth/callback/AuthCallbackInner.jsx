@@ -1,9 +1,8 @@
 "use client";
+
 import { useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { supabaseBrowser } from "@/utils/supabase/client";
-const supabase = supabaseBrowser;
-
 
 export default function AuthCallbackInner() {
   const router = useRouter();
@@ -12,16 +11,25 @@ export default function AuthCallbackInner() {
   useEffect(() => {
     const run = async () => {
       const code = params.get("code");
-      if (!code) return router.push("/login");
 
-      const { error } = await supabaseBrowser.auth.exchangeCodeForSession(code);
-      if (error) {
-        console.error(error);
+      if (!code) {
         return router.push("/login");
       }
 
+      // ★ v2 正しい書き方（オブジェクトで渡す）
+      const { error } = await supabaseBrowser.auth.exchangeCodeForSession({
+        code,
+      });
+
+      if (error) {
+        console.error("auth callback error:", error);
+        return router.push("/login");
+      }
+
+      // ★ 認証成功
       router.push("/");
     };
+
     run();
   }, [params, router]);
 
