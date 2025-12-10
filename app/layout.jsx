@@ -2,7 +2,7 @@
 
 import "./globals.css";
 import "../lib/frameStyles.css";
-import UserHeader from "./ui/UserHeader"; // ← クライアント側のヘッダーに移動
+import UserHeader from "./UserHeader"; // ← クライアント側のヘッダーに移動
 
 export const metadata = {
   title: "mangaHokanko",
