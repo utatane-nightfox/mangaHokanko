@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabaseBrowser } from "@/utils/supabase/client";
 
+// ❗ createBrowserClient は "関数" → 必ず実行してクライアント生成
 const supabase = supabaseBrowser();
 
 export default function UserHeader() {
@@ -45,7 +46,9 @@ export default function UserHeader() {
   const loadUser = async () => {
     const { data: { session } } = await supabase.auth.getSession();
 
-    if (!session) return;
+    if (!session) {
+      return;
+    }
 
     const user = session.user;
     setUserEmail(user.email);
@@ -78,7 +81,6 @@ export default function UserHeader() {
         newTitle = newResearchTitle;
       }
 
-      // 称号更新がある場合のみ
       if (newTitle && newTitle !== profile.title) {
         await supabase
           .from("profiles")
@@ -125,9 +127,6 @@ export default function UserHeader() {
     router.push("/login");
   };
 
-  // ------------------------
-  // UI
-  // ------------------------
   return (
     <>
       <header className="fixed top-0 right-0 bg-white shadow-md p-3 rounded-bl-2xl flex items-center gap-3 z-50">
