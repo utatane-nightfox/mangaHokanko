@@ -11,22 +11,20 @@ export default function AuthCallbackInner() {
   useEffect(() => {
     const run = async () => {
       const code = params.get("code");
+      if (!code) return router.push("/login");
 
-      if (!code) {
-        return router.push("/login");
-      }
-
-      // ★ v2 正しい書き方（オブジェクトで渡す）
-      const { error } = await supabaseBrowser.auth.exchangeCodeForSession({
-        code,
-      });
+      // 🌟 セッション交換
+      const { error } = await supabaseBrowser.auth.exchangeCodeForSession(code);
 
       if (error) {
-        console.error("auth callback error:", error);
+        console.error("Auth error:", error);
         return router.push("/login");
       }
 
-      // ★ 認証成功
+      // 🌟 SSR のセッションを更新させるために必要
+      router.refresh();
+
+      // ホームへ
       router.push("/");
     };
 
