@@ -3,28 +3,42 @@
 import { useEffect, useState } from "react";
 import { supabaseBrowser as supabase } from "@/utils/supabase/client";
 
-
 export default function HomePage() {
+  const [session, setSession] = useState(undefined); // ← undefined で「読み込み中」を区別
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // --- セッションを確実に取得 ---
   useEffect(() => {
+    const loadSession = async () => {
+      const { data } = await supabase.auth.getSession();
+      setSession(data.session);
+
+      // セッション変更を監視
+      supabase.auth.onAuthStateChange((_event, newSession) => {
+        setSession(newSession);
+      });
+    };
+
+    loadSession();
+  }, []);
+
+  // --- session が確定してから fetch ---
+  useEffect(() => {
+    // session が undefined の時はまだ読み込み中
+    if (session === undefined) return;
+
+    // 未ログイン
+    if (session === null) {
+      window.location.href = "/login";
+      return;
+    }
+
     const fetchProfile = async () => {
       try {
-        // 🔐 セッション確認
-        const {
-          data: { session },
-        } = await supabase.auth.getSession();
-
-        if (!session) {
-          window.location.href = "/login";
-          return;
-        }
-
         const token = session.access_token;
 
-        // 🧩 Edge Function を呼び出し
         const res = await fetch(
           `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/get-or-create-profile`,
           {
@@ -47,8 +61,10 @@ export default function HomePage() {
     };
 
     fetchProfile();
-  }, []);
+  }, [session]);
 
+  // --- 画面表示 ---
+  if (session === undefined) return <div>セッション確認中…</div>;
   if (loading) return <div>読み込み中…</div>;
   if (error) return <div className="text-red-500">{error}</div>;
   if (!profile) return null;
