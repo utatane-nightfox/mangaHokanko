@@ -1,7 +1,6 @@
 "use client";
 import { useState } from "react";
 import { supabaseBrowser } from "@/utils/supabase/client";
-const supabase = supabaseBrowser();
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -13,7 +12,7 @@ export default function LoginPage() {
     setLoading(true);
     setMessage("");
 
-    const supabase = supabaseBrowser(); // ←← 重要！
+    const supabase = supabaseBrowser(); // ← 重要：ここで初期化
 
     try {
       const { error } = await supabase.auth.signInWithOtp({

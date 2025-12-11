@@ -4,32 +4,33 @@ import { useEffect, useState } from "react";
 import { supabaseBrowser } from "@/utils/supabase/client";
 
 export default function HomePage() {
-  const [session, setSession] = useState(undefined); // ← undefined で「読み込み中」を区別
+  // ← ★ supabase インスタンスを生成（これがないと supabase is not defined）
+  const supabase = supabaseBrowser();
+
+  const [session, setSession] = useState(undefined);
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // --- セッションを確実に取得 ---
+  // --- セッション取得 ---
   useEffect(() => {
     const loadSession = async () => {
       const { data } = await supabase.auth.getSession();
       setSession(data.session);
 
-      // セッション変更を監視
+      // セッション変化も監視
       supabase.auth.onAuthStateChange((_event, newSession) => {
         setSession(newSession);
       });
     };
 
     loadSession();
-  }, []);
+  }, [supabase]);
 
-  // --- session が確定してから fetch ---
+  // --- session の状態が確定してからプロフィール取得 ---
   useEffect(() => {
-    // session が undefined の時はまだ読み込み中
-    if (session === undefined) return;
+    if (session === undefined) return; // まだ確認中
 
-    // 未ログイン
     if (session === null) {
       window.location.href = "/login";
       return;
@@ -63,7 +64,7 @@ export default function HomePage() {
     fetchProfile();
   }, [session]);
 
-  // --- 画面表示 ---
+  // --- 表示 ---
   if (session === undefined) return <div>セッション確認中…</div>;
   if (loading) return <div>読み込み中…</div>;
   if (error) return <div className="text-red-500">{error}</div>;
