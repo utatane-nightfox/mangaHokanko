@@ -1,9 +1,7 @@
 "use client";
-
 import { useState } from "react";
 import { supabaseBrowser } from "@/utils/supabase/client";
-
-const supabase = supabaseBrowser(); // ← これが正しい作り方！
+const supabase = supabaseBrowser();
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -15,6 +13,8 @@ export default function LoginPage() {
     setLoading(true);
     setMessage("");
 
+    const supabase = supabaseBrowser(); // ←← 重要！
+
     try {
       const { error } = await supabase.auth.signInWithOtp({
         email,
@@ -24,7 +24,6 @@ export default function LoginPage() {
       });
 
       if (error) throw error;
-
       setMessage("ログインリンクを送信しました。メールを確認してください。");
     } catch (error) {
       console.error(error.message);

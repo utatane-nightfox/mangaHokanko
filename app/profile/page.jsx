@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { supabaseBrowser } from "@/utils/supabase/client"; // ← これだけでOK
-const supabase = supabaseBrowser;
+const supabase = supabaseBrowser();
 import { useRouter } from "next/navigation";
 import "@/lib/frameStyles.css";
 
