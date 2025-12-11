@@ -8,27 +8,24 @@ export default function HomePage() {
 
   const [session, setSession] = useState(undefined);
   const [profile, setProfile] = useState(null);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   // --- セッション取得 ---
   useEffect(() => {
-    const loadSession = async () => {
+    const load = async () => {
       const { data } = await supabase.auth.getSession();
       setSession(data.session);
 
-      supabase.auth.onAuthStateChange((_e, newSession) => {
+      supabase.auth.onAuthStateChange((_event, newSession) => {
         setSession(newSession);
       });
     };
-
-    loadSession();
+    load();
   }, [supabase]);
 
   // --- プロフィール取得 ---
   useEffect(() => {
     if (session === undefined) return;
-
     if (session === null) {
       window.location.href = "/login";
       return;
@@ -51,21 +48,19 @@ export default function HomePage() {
 
         const data = await res.json();
         setProfile(data);
-      } catch (err) {
-        console.error(err);
+      } catch (e) {
+        console.error(e);
         setError("プロフィール情報の取得に失敗しました。");
-      } finally {
-        setLoading(false);
       }
     };
 
     fetchProfile();
   }, [session]);
 
+  // --- 表示 ---
   if (session === undefined) return <div>セッション確認中…</div>;
-  if (loading) return <div>読み込み中…</div>;
   if (error) return <div className="text-red-500">{error}</div>;
-  if (!profile) return null;
+  if (!profile) return <div>読み込み中…</div>;
 
   const {
     nickname,
@@ -81,26 +76,16 @@ export default function HomePage() {
     <main className="p-6 min-h-screen bg-gray-50">
       <section className="bg-white shadow-md rounded-2xl p-6 mb-8">
         <div className="flex items-center gap-4">
-          <div
-            className={`relative w-16 h-16 flex items-center justify-center border-2 rounded-full ${icon_frame}`}
-          >
+          <div className={`relative w-16 h-16 flex items-center justify-center border-2 rounded-full ${icon_frame}`}>
             {avatar_url ? (
-              <img
-                src={avatar_url}
-                alt="avatar"
-                className="w-full h-full object-cover rounded-full"
-              />
+              <img src={avatar_url} className="w-full h-full object-cover rounded-full" />
             ) : (
               <span className="text-2xl">👤</span>
             )}
           </div>
           <div>
-            <h2 className="text-xl font-bold">
-              {nickname || "名無しの読書家"}
-            </h2>
-            <p className="text-gray-500">
-              現在の称号：{current_title || "なし"}
-            </p>
+            <h2 className="text-xl font-bold">{nickname || "名無しの読書家"}</h2>
+            <p className="text-gray-500">現在の称号：{current_title || "なし"}</p>
           </div>
         </div>
       </section>
@@ -109,15 +94,11 @@ export default function HomePage() {
         <h3 className="text-lg font-semibold mb-4">📚 現在の進捗</h3>
         <div className="grid grid-cols-2 gap-6 text-center">
           <div>
-            <p className="text-3xl font-bold text-blue-600">
-              {total_chapters || 0}
-            </p>
+            <p className="text-3xl font-bold text-blue-600">{total_chapters || 0}</p>
             <p className="text-gray-500">合計話数</p>
           </div>
           <div>
-            <p className="text-3xl font-bold text-green-600">
-              {total_registered || 0}
-            </p>
+            <p className="text-3xl font-bold text-green-600">{total_registered || 0}</p>
             <p className="text-gray-500">合計登録数</p>
           </div>
         </div>
@@ -127,12 +108,9 @@ export default function HomePage() {
         <h3 className="text-lg font-semibold mb-4">🏅 獲得済み称号</h3>
         {title_unlocked.length > 0 ? (
           <ul className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-            {title_unlocked.map((title, idx) => (
-              <li
-                key={idx}
-                className="bg-gray-100 border rounded-lg px-3 py-2 text-center hover:bg-yellow-50 transition"
-              >
-                {title}
+            {title_unlocked.map((t, idx) => (
+              <li key={idx} className="bg-gray-100 border rounded-lg px-3 py-2 text-center hover:bg-yellow-50 transition">
+                {t}
               </li>
             ))}
           </ul>

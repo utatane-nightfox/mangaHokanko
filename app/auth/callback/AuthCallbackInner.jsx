@@ -13,9 +13,9 @@ export default function AuthCallbackInner() {
       const code = params.get("code");
       if (!code) return router.push("/login");
 
-      const supabase = supabaseBrowser();
+      const supabase = supabaseBrowser(); // ★ 必須
 
-      // --- 認証コード → セッション交換 ---
+      // --- セッション交換 ---
       const { error } = await supabase.auth.exchangeCodeForSession(code);
 
       if (error) {
@@ -23,7 +23,7 @@ export default function AuthCallbackInner() {
         return router.push("/login");
       }
 
-      // SSR セッション反映
+      // SSR セッション更新
       router.refresh();
 
       // ホームへ
