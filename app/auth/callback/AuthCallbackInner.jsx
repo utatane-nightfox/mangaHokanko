@@ -3,7 +3,6 @@
 import { useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { supabaseBrowser } from "@/utils/supabase/client";
-const supabase = supabaseBrowser();
 
 export default function AuthCallbackInner() {
   const router = useRouter();
@@ -14,15 +13,17 @@ export default function AuthCallbackInner() {
       const code = params.get("code");
       if (!code) return router.push("/login");
 
-      // 🌟 セッション交換
-      const { error } = await supabaseBrowser.auth.exchangeCodeForSession(code);
+      const supabase = supabaseBrowser();  // ← ★ ここが必須！
+
+      // セッション交換
+      const { error } = await supabase.auth.exchangeCodeForSession(code);
 
       if (error) {
         console.error("Auth error:", error);
         return router.push("/login");
       }
 
-      // 🌟 SSR のセッションを更新させるために必要
+      // Next.js の SSR セッション更新
       router.refresh();
 
       // ホームへ
