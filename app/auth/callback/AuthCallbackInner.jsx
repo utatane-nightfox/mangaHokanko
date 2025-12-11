@@ -13,20 +13,17 @@ export default function AuthCallbackInner() {
       const code = params.get("code");
       if (!code) return router.push("/login");
 
-      const supabase = supabaseBrowser();  // ← ★ ここが必須！
+      const supabase = supabaseBrowser();
 
-      // セッション交換
-      const { error } = await supabase.auth.exchangeCodeForSession(code);
+      // 🔥 正しい書き方（オブジェクトとして渡す）
+      const { data, error } = await supabase.auth.exchangeCodeForSession({ code });
 
       if (error) {
         console.error("Auth error:", error);
         return router.push("/login");
       }
 
-      // Next.js の SSR セッション更新
-      router.refresh();
-
-      // ホームへ
+      router.refresh(); // セッション更新
       router.push("/");
     };
 
