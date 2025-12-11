@@ -1,6 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
-import { supabaseBrowser as supabase } from "@/utils/supabase/client";
+import { supabaseBrowser } from "@/utils/supabase/client";
 
 
 

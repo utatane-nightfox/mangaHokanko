@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { supabaseBrowser as supabase } from "@/utils/supabase/client";
+import { supabaseBrowser } from "@/utils/supabase/client";
 
 export default function HomePage() {
   const [session, setSession] = useState(undefined); // ← undefined で「読み込み中」を区別
