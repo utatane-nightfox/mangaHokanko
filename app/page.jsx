@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { supabaseBrowser } from "@/utils/supabase/client";
 
 export default function HomePage() {
-  // ← ★ supabase インスタンスを生成（これがないと supabase is not defined）
   const supabase = supabaseBrowser();
 
   const [session, setSession] = useState(undefined);
@@ -18,8 +17,7 @@ export default function HomePage() {
       const { data } = await supabase.auth.getSession();
       setSession(data.session);
 
-      // セッション変化も監視
-      supabase.auth.onAuthStateChange((_event, newSession) => {
+      supabase.auth.onAuthStateChange((_e, newSession) => {
         setSession(newSession);
       });
     };
@@ -27,9 +25,9 @@ export default function HomePage() {
     loadSession();
   }, [supabase]);
 
-  // --- session の状態が確定してからプロフィール取得 ---
+  // --- プロフィール取得 ---
   useEffect(() => {
-    if (session === undefined) return; // まだ確認中
+    if (session === undefined) return;
 
     if (session === null) {
       window.location.href = "/login";
@@ -64,7 +62,6 @@ export default function HomePage() {
     fetchProfile();
   }, [session]);
 
-  // --- 表示 ---
   if (session === undefined) return <div>セッション確認中…</div>;
   if (loading) return <div>読み込み中…</div>;
   if (error) return <div className="text-red-500">{error}</div>;
@@ -82,7 +79,6 @@ export default function HomePage() {
 
   return (
     <main className="p-6 min-h-screen bg-gray-50">
-      {/* プロフィール */}
       <section className="bg-white shadow-md rounded-2xl p-6 mb-8">
         <div className="flex items-center gap-4">
           <div
@@ -99,7 +95,9 @@ export default function HomePage() {
             )}
           </div>
           <div>
-            <h2 className="text-xl font-bold">{nickname || "名無しの読書家"}</h2>
+            <h2 className="text-xl font-bold">
+              {nickname || "名無しの読書家"}
+            </h2>
             <p className="text-gray-500">
               現在の称号：{current_title || "なし"}
             </p>
@@ -107,7 +105,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* 統計 */}
       <section className="bg-white shadow-md rounded-2xl p-6 mb-8">
         <h3 className="text-lg font-semibold mb-4">📚 現在の進捗</h3>
         <div className="grid grid-cols-2 gap-6 text-center">
@@ -126,7 +123,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* 称号 */}
       <section className="bg-white shadow-md rounded-2xl p-6">
         <h3 className="text-lg font-semibold mb-4">🏅 獲得済み称号</h3>
         {title_unlocked.length > 0 ? (

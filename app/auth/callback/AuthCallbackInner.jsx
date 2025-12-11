@@ -15,15 +15,18 @@ export default function AuthCallbackInner() {
 
       const supabase = supabaseBrowser();
 
-      // 🔥 正しい書き方（オブジェクトとして渡す）
-      const { data, error } = await supabase.auth.exchangeCodeForSession({ code });
+      // --- 認証コード → セッション交換 ---
+      const { error } = await supabase.auth.exchangeCodeForSession(code);
 
       if (error) {
         console.error("Auth error:", error);
         return router.push("/login");
       }
 
-      router.refresh(); // セッション更新
+      // SSR セッション反映
+      router.refresh();
+
+      // ホームへ
       router.push("/");
     };
 
