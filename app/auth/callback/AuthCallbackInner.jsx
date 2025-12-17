@@ -11,22 +11,25 @@ export default function AuthCallbackInner() {
   useEffect(() => {
     const run = async () => {
       const code = params.get("code");
-      if (!code) return router.push("/login");
+      if (!code) {
+        router.push("/login");
+        return;
+      }
 
-      const supabase = supabaseBrowser(); // ★ 必須
+      const supabase = supabaseBrowser();
 
-      // --- セッション交換 ---
-      const { error } = await supabase.auth.exchangeCodeForSession(code);
+      // ★★ ここが絶対に間違えてはいけない部分！ ★★
+      const { data, error } = await supabase.auth.exchangeCodeForSession({
+        code,
+      });
 
       if (error) {
         console.error("Auth error:", error);
-        return router.push("/login");
+        router.push("/login");
+        return;
       }
 
-      // SSR セッション更新
       router.refresh();
-
-      // ホームへ
       router.push("/");
     };
 
@@ -35,3 +38,6 @@ export default function AuthCallbackInner() {
 
   return <p>認証中...</p>;
 }
+
+const { data: sessionData } = await supabase.auth.getSession();
+console.log("SESSION AFTER EXCHANGE:", sessionData);
