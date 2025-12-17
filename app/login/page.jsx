@@ -1,65 +1,100 @@
 "use client";
+
 import { useState } from "react";
 import { supabaseBrowser } from "@/utils/supabase/client";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
+  const [sent, setSent] = useState(false);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
 
-  const handleLogin = async (e) => {
+  const supabase = supabaseBrowser();
+
+  // ① メール送信
+  const handleSend = async (e) => {
     e.preventDefault();
     setLoading(true);
     setMessage("");
 
-    const supabase = supabaseBrowser(); // ← 重要：ここで初期化
+    const { error } = await supabase.auth.signInWithOtp({ email });
 
-    try {
-      const { error } = await supabase.auth.signInWithOtp({
-        email,
-        options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback`,
-        },
-      });
-
-      if (error) throw error;
-      setMessage("ログインリンクを送信しました。メールを確認してください。");
-    } catch (error) {
-      console.error(error.message);
-      setMessage("ログインに失敗しました。もう一度お試しください。");
-    } finally {
-      setLoading(false);
+    if (error) {
+      setMessage("メール送信に失敗しました");
+    } else {
+      setSent(true);
+      setMessage("6桁コードをメールに送信しました");
     }
+
+    setLoading(false);
+  };
+
+  // ② コード入力・認証
+  const handleVerify = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+
+    const token = e.target.token.value;
+
+    const { data, error } = await supabase.auth.verifyOtp({
+      email,
+      token,
+      type: "email",
+    });
+
+    if (error) {
+      setMessage("コードが間違っています");
+    } else {
+      window.location.href = "/";
+    }
+
+    setLoading(false);
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-blue-50 to-purple-100">
-      <div className="bg-white p-8 rounded-2xl shadow-md w-full max-w-md">
-        <h1 className="text-2xl font-bold mb-6 text-center text-blue-600">
-          漫画保管庫 ログイン
-        </h1>
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="bg-white p-8 rounded-xl shadow-md w-full max-w-md">
 
-        <form onSubmit={handleLogin} className="space-y-4">
-          <input
-            type="email"
-            className="border border-gray-300 p-2 w-full rounded focus:ring-2 focus:ring-blue-400 outline-none"
-            placeholder="メールアドレスを入力"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
-
-          <button
-            type="submit"
-            className="bg-blue-500 text-white w-full py-2 rounded hover:bg-blue-600 transition disabled:bg-gray-400"
-            disabled={loading}
-          >
-            {loading ? "送信中..." : "ログインリンク送信"}
-          </button>
-        </form>
+        {!sent ? (
+          <form onSubmit={handleSend} className="space-y-4">
+            <h2 className="text-xl font-bold">メールログイン</h2>
+            <input
+              type="email"
+              placeholder="メールアドレス"
+              className="border p-2 w-full rounded"
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+            <button
+              type="submit"
+              className="bg-blue-500 text-white w-full py-2 rounded"
+              disabled={loading}
+            >
+              {loading ? "送信中..." : "6桁コードを送る"}
+            </button>
+          </form>
+        ) : (
+          <form onSubmit={handleVerify} className="space-y-4">
+            <h2 className="text-xl font-bold">コード入力</h2>
+            <input
+              name="token"
+              type="text"
+              placeholder="6桁コード"
+              className="border p-2 w-full rounded"
+              required
+            />
+            <button
+              type="submit"
+              className="bg-green-500 text-white w-full py-2 rounded"
+              disabled={loading}
+            >
+              {loading ? "認証中..." : "ログイン"}
+            </button>
+          </form>
+        )}
 
         {message && (
-          <p className="mt-4 text-center text-sm text-gray-700">{message}</p>
+          <p className="mt-4 text-center text-sm">{message}</p>
         )}
       </div>
     </div>
