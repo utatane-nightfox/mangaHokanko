@@ -13,23 +13,21 @@ export default function AuthCallbackInner() {
       const code = params.get("code");
       if (!code) {
         console.error("認証コードなし");
-        return router.push("/login");
+        router.push("/login");
+        return;
       }
 
-      const supabase = supabaseBrowser(); // Browserクライアント
+      const supabase = supabaseBrowser();
 
-      // --- セッション交換 ---
       const { error } = await supabase.auth.exchangeCodeForSession(code);
 
       if (error) {
         console.error("Auth error:", error);
-        return router.push("/login");
+        router.push("/login");
+        return;
       }
 
-      // セッションを最新化
       router.refresh();
-
-      // ホームに遷移
       router.push("/");
     };
 
