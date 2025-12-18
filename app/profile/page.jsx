@@ -25,9 +25,7 @@ export default function ProfilePage() {
     { id: "frame3", label: "ネオン" },
   ];
 
-  // =========================
-  // プロフィール読み込み
-  // =========================
+  // プロフィール取得
   useEffect(() => {
     const loadProfile = async () => {
       const { data } = await supabase.auth.getSession();
@@ -48,24 +46,25 @@ export default function ProfilePage() {
         .single();
 
       if (error) {
-        console.error(error);
-        alert("プロフィール取得失敗");
+        console.error("profile load error:", error);
+        alert("プロフィール取得に失敗しました");
         return;
       }
 
-      setNickname(profile.nickname || "");
-      setIconFrame(profile.icon_frame || "none");
-      setCurrentTitle(profile.current_title || "");
-      setProfileImage(profile.avatar_url || null);
+      setNickname(profile.nickname ?? "");
+      setIconFrame(profile.icon_frame ?? "none");
+      setCurrentTitle(profile.current_title ?? "");
+      setProfileImage(profile.avatar_url ?? null);
 
-      // 称号計算（最低限）
       const titles = [];
-      const ch = profile.total_chapters || 0;
-      const rg = profile.total_registered || 0;
+      const ch = profile.total_chapters ?? 0;
+      const rg = profile.total_registered ?? 0;
 
       if (ch >= 100) titles.push("見習い読書家");
       if (ch >= 1000) titles.push("一般読書家");
+      if (ch >= 5000) titles.push("中堅読書家");
       if (rg >= 10) titles.push("放浪研究家");
+      if (rg >= 100) titles.push("図書館所属研究家");
 
       setAvailableTitles(titles);
     };
@@ -73,50 +72,47 @@ export default function ProfilePage() {
     loadProfile();
   }, [router, supabase]);
 
-  // =========================
   // 画像アップロード
-  // =========================
   const handleImageUpload = async (e) => {
     if (!userId) return;
     const file = e.target.files?.[0];
     if (!file) return;
 
     setUploading(true);
+
     try {
       const filePath = `${userId}/${Date.now()}-${file.name}`;
 
-      const { error } = await supabase.storage
+      const { error: uploadError } = await supabase.storage
         .from("avatars")
         .upload(filePath, file, { upsert: true });
 
-      if (error) throw error;
+      if (uploadError) throw uploadError;
 
-      const { data } = supabase.storage
-        .from("avatars")
-        .getPublicUrl(filePath);
-
+      const { data } = supabase.storage.from("avatars").getPublicUrl(filePath);
       const url = data.publicUrl;
+
       setProfileImage(url);
 
-      await supabase.from("profiles").update({
-        avatar_url: url,
-      }).eq("id", userId);
+      const { error: updateError } = await supabase
+        .from("profiles")
+        .update({ avatar_url: url })
+        .eq("id", userId);
 
+      if (updateError) throw updateError;
     } catch (err) {
       console.error(err);
-      alert("画像保存失敗");
+      alert("画像保存に失敗しました");
     } finally {
       setUploading(false);
     }
   };
 
-  // =========================
   // 保存
-  // =========================
   const handleSave = async () => {
     if (!userId) return;
-
     setSaving(true);
+
     const { error } = await supabase
       .from("profiles")
       .update({
@@ -129,68 +125,42 @@ export default function ProfilePage() {
     setSaving(false);
 
     if (error) {
-      console.error(error);
-      alert("保存失敗");
+      console.error("save error:", error);
+      alert("保存に失敗しました");
     } else {
-      alert("プロフィールを更新しました");
+      alert("プロフィールを保存しました");
       router.push("/");
     }
   };
 
-  // =========================
-  // 表示
-  // =========================
   return (
-    <div className="min-h-screen bg-gray-100 flex justify-center items-center p-6">
-      <div className="bg-white p-6 rounded-xl shadow-md w-full max-w-md">
-        <h1 className="text-xl font-bold mb-4 text-center">プロフィール編集</h1>
+    <div className="min-h-screen flex items-center justify-center bg-gray-100 p-6">
+      <div className="bg-white p-6 rounded-xl shadow w-full max-w-md">
+        <h1 className="text-xl font-bold mb-4">プロフィール編集</h1>
 
-        {/* アイコン */}
         <div className="text-center mb-4">
-          <div
-            className={`w-24 h-24 mx-auto rounded-full border-4 flex items-center justify-center text-3xl ${iconFrame}`}
-          >
+          <div className={`w-24 h-24 mx-auto rounded-full border-4 ${iconFrame}`}>
             {profileImage ? (
-              <img
-                src={profileImage}
-                className="w-full h-full rounded-full object-cover"
-              />
+              <img src={profileImage} className="w-full h-full rounded-full object-cover" />
             ) : (
-              "👤"
+              <div className="flex items-center justify-center h-full text-3xl">👤</div>
             )}
           </div>
-          <input type="file" onChange={handleImageUpload} className="mt-2 text-sm" />
-          {uploading && <p className="text-xs text-gray-500">アップロード中…</p>}
+          <input type="file" onChange={handleImageUpload} />
+          {uploading && <p className="text-sm text-gray-500">アップロード中…</p>}
         </div>
 
-        {/* ニックネーム */}
         <input
+          className="border p-2 w-full mb-3"
           value={nickname}
           onChange={(e) => setNickname(e.target.value)}
-          className="border p-2 w-full rounded mb-3"
           placeholder="ニックネーム"
         />
 
-        {/* 枠 */}
-        <div className="grid grid-cols-4 gap-2 mb-3">
-          {frames.map((f) => (
-            <button
-              key={f.id}
-              onClick={() => setIconFrame(f.id)}
-              className={`p-2 border rounded ${
-                iconFrame === f.id ? "border-blue-500" : "border-gray-300"
-              }`}
-            >
-              <div className={`w-8 h-8 mx-auto ${f.id}`}>👤</div>
-            </button>
-          ))}
-        </div>
-
-        {/* 称号 */}
         <select
+          className="border p-2 w-full mb-3"
           value={currentTitle}
           onChange={(e) => setCurrentTitle(e.target.value)}
-          className="border p-2 w-full rounded mb-4"
         >
           <option value="">称号なし</option>
           {availableTitles.map((t) => (
@@ -201,9 +171,9 @@ export default function ProfilePage() {
         <button
           onClick={handleSave}
           disabled={saving}
-          className="w-full bg-blue-500 text-white py-2 rounded"
+          className="bg-blue-500 text-white w-full py-2 rounded"
         >
-          {saving ? "保存中..." : "保存"}
+          {saving ? "保存中..." : "保存する"}
         </button>
       </div>
     </div>
