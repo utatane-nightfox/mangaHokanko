@@ -12,7 +12,7 @@ export default function ProfilePage() {
   const [userId, setUserId] = useState(null);
   const [nickname, setNickname] = useState("");
   const [iconFrame, setIconFrame] = useState("none");
-  const [currentTitle, setCurrentTitle] = useState("");
+  const [currentTitle, setCurrentTitle] = useState(null);
   const [availableTitles, setAvailableTitles] = useState([]);
   const [profileImage, setProfileImage] = useState(null);
   const [saving, setSaving] = useState(false);
@@ -25,7 +25,9 @@ export default function ProfilePage() {
     { id: "frame3", label: "ネオン" },
   ];
 
+  // ========================
   // プロフィール取得
+  // ========================
   useEffect(() => {
     const loadProfile = async () => {
       const { data } = await supabase.auth.getSession();
@@ -53,9 +55,10 @@ export default function ProfilePage() {
 
       setNickname(profile.nickname ?? "");
       setIconFrame(profile.icon_frame ?? "none");
-      setCurrentTitle(profile.current_title ?? "");
+      setCurrentTitle(profile.current_title ?? null);
       setProfileImage(profile.avatar_url ?? null);
 
+      // 称号判定
       const titles = [];
       const ch = profile.total_chapters ?? 0;
       const rg = profile.total_registered ?? 0;
@@ -63,8 +66,15 @@ export default function ProfilePage() {
       if (ch >= 100) titles.push("見習い読書家");
       if (ch >= 1000) titles.push("一般読書家");
       if (ch >= 5000) titles.push("中堅読書家");
+      if (ch >= 10000) titles.push("プロ読書家");
+      if (ch >= 100000) titles.push("伝導者");
+
       if (rg >= 10) titles.push("放浪研究家");
       if (rg >= 100) titles.push("図書館所属研究家");
+      if (rg >= 500) titles.push("王宮所属研究家");
+      if (rg >= 1000) titles.push("究明者");
+
+      if (ch >= 100000 && rg >= 1000) titles.push("漫画王");
 
       setAvailableTitles(titles);
     };
@@ -72,14 +82,15 @@ export default function ProfilePage() {
     loadProfile();
   }, [router, supabase]);
 
+  // ========================
   // 画像アップロード
+  // ========================
   const handleImageUpload = async (e) => {
     if (!userId) return;
     const file = e.target.files?.[0];
     if (!file) return;
 
     setUploading(true);
-
     try {
       const filePath = `${userId}/${Date.now()}-${file.name}`;
 
@@ -108,7 +119,9 @@ export default function ProfilePage() {
     }
   };
 
+  // ========================
   // 保存
+  // ========================
   const handleSave = async () => {
     if (!userId) return;
     setSaving(true);
@@ -118,7 +131,7 @@ export default function ProfilePage() {
       .update({
         nickname,
         icon_frame: iconFrame,
-        current_title: currentTitle || null,
+        current_title: currentTitle,
       })
       .eq("id", userId);
 
@@ -141,13 +154,21 @@ export default function ProfilePage() {
         <div className="text-center mb-4">
           <div className={`w-24 h-24 mx-auto rounded-full border-4 ${iconFrame}`}>
             {profileImage ? (
-              <img src={profileImage} className="w-full h-full rounded-full object-cover" />
+              <img
+                src={profileImage}
+                className="w-full h-full rounded-full object-cover"
+              />
             ) : (
-              <div className="flex items-center justify-center h-full text-3xl">👤</div>
+              <div className="flex items-center justify-center h-full text-3xl">
+                👤
+              </div>
             )}
           </div>
+
           <input type="file" onChange={handleImageUpload} />
-          {uploading && <p className="text-sm text-gray-500">アップロード中…</p>}
+          {uploading && (
+            <p className="text-sm text-gray-500">アップロード中…</p>
+          )}
         </div>
 
         <input
@@ -159,12 +180,14 @@ export default function ProfilePage() {
 
         <select
           className="border p-2 w-full mb-3"
-          value={currentTitle}
-          onChange={(e) => setCurrentTitle(e.target.value)}
+          value={currentTitle ?? ""}
+          onChange={(e) => setCurrentTitle(e.target.value || null)}
         >
           <option value="">称号なし</option>
           {availableTitles.map((t) => (
-            <option key={t} value={t}>{t}</option>
+            <option key={t} value={t}>
+              {t}
+            </option>
           ))}
         </select>
 
