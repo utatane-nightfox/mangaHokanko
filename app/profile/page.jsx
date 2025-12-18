@@ -12,31 +12,24 @@ export default function ProfilePage() {
   const [userId, setUserId] = useState(null);
   const [nickname, setNickname] = useState("");
   const [iconFrame, setIconFrame] = useState("none");
-  const [currentTitle, setCurrentTitle] = useState(null);
+  const [currentTitle, setCurrentTitle] = useState("");
   const [availableTitles, setAvailableTitles] = useState([]);
   const [profileImage, setProfileImage] = useState(null);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
-
-  const frames = [
-    { id: "none", label: "枠なし" },
-    { id: "frame1", label: "ピンク丸" },
-    { id: "frame2", label: "グリーン丸" },
-    { id: "frame3", label: "ネオン" },
-  ];
 
   // ========================
   // プロフィール取得
   // ========================
   useEffect(() => {
     const loadProfile = async () => {
-      const { data } = await supabase.auth.getSession();
-      if (!data?.session) {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
         router.push("/login");
         return;
       }
 
-      const user = data.session.user;
+      const user = session.user;
       setUserId(user.id);
 
       const { data: profile, error } = await supabase
@@ -45,17 +38,18 @@ export default function ProfilePage() {
           "nickname, icon_frame, current_title, total_chapters, total_registered, avatar_url"
         )
         .eq("id", user.id)
-        .single();
+        .maybeSingle(); // ← single() より安全
 
       if (error) {
         console.error("profile load error:", error);
-        alert("プロフィール取得に失敗しました");
         return;
       }
 
+      if (!profile) return;
+
       setNickname(profile.nickname ?? "");
       setIconFrame(profile.icon_frame ?? "none");
-      setCurrentTitle(profile.current_title ?? null);
+      setCurrentTitle(profile.current_title ?? "");
       setProfileImage(profile.avatar_url ?? null);
 
       // 称号判定
@@ -94,23 +88,23 @@ export default function ProfilePage() {
     try {
       const filePath = `${userId}/${Date.now()}-${file.name}`;
 
-      const { error: uploadError } = await supabase.storage
+      const { error } = await supabase.storage
         .from("avatars")
         .upload(filePath, file, { upsert: true });
 
-      if (uploadError) throw uploadError;
+      if (error) throw error;
 
-      const { data } = supabase.storage.from("avatars").getPublicUrl(filePath);
+      const { data } = supabase.storage
+        .from("avatars")
+        .getPublicUrl(filePath);
+
       const url = data.publicUrl;
-
       setProfileImage(url);
 
-      const { error: updateError } = await supabase
+      await supabase
         .from("profiles")
         .update({ avatar_url: url })
         .eq("id", userId);
-
-      if (updateError) throw updateError;
     } catch (err) {
       console.error(err);
       alert("画像保存に失敗しました");
@@ -131,14 +125,14 @@ export default function ProfilePage() {
       .update({
         nickname,
         icon_frame: iconFrame,
-        current_title: currentTitle,
+        current_title: currentTitle || "",
       })
       .eq("id", userId);
 
     setSaving(false);
 
     if (error) {
-      console.error("save error:", error);
+      console.error(error);
       alert("保存に失敗しました");
     } else {
       alert("プロフィールを保存しました");
@@ -154,21 +148,14 @@ export default function ProfilePage() {
         <div className="text-center mb-4">
           <div className={`w-24 h-24 mx-auto rounded-full border-4 ${iconFrame}`}>
             {profileImage ? (
-              <img
-                src={profileImage}
-                className="w-full h-full rounded-full object-cover"
-              />
+              <img src={profileImage} className="w-full h-full rounded-full object-cover" />
             ) : (
-              <div className="flex items-center justify-center h-full text-3xl">
-                👤
-              </div>
+              <div className="flex items-center justify-center h-full text-3xl">👤</div>
             )}
           </div>
 
           <input type="file" onChange={handleImageUpload} />
-          {uploading && (
-            <p className="text-sm text-gray-500">アップロード中…</p>
-          )}
+          {uploading && <p className="text-sm text-gray-500">アップロード中…</p>}
         </div>
 
         <input
@@ -180,14 +167,12 @@ export default function ProfilePage() {
 
         <select
           className="border p-2 w-full mb-3"
-          value={currentTitle ?? ""}
-          onChange={(e) => setCurrentTitle(e.target.value || null)}
+          value={currentTitle}
+          onChange={(e) => setCurrentTitle(e.target.value)}
         >
           <option value="">称号なし</option>
           {availableTitles.map((t) => (
-            <option key={t} value={t}>
-              {t}
-            </option>
+            <option key={t} value={t}>{t}</option>
           ))}
         </select>
 
