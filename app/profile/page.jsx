@@ -12,7 +12,7 @@ export default function ProfilePage() {
   const [userId, setUserId] = useState(null);
   const [nickname, setNickname] = useState("");
   const [iconFrame, setIconFrame] = useState("none");
-  const [currentTitle, setCurrentTitle] = useState(null);
+  const [currentTitle, setCurrentTitle] = useState("");
   const [availableTitles, setAvailableTitles] = useState([]);
   const [profileImage, setProfileImage] = useState(null);
   const [saving, setSaving] = useState(false);
@@ -25,9 +25,11 @@ export default function ProfilePage() {
     { id: "frame3", label: "ネオン" },
   ];
 
+  // =========================
   // プロフィール読み込み
+  // =========================
   useEffect(() => {
-    const load = async () => {
+    const loadProfile = async () => {
       const { data } = await supabase.auth.getSession();
       if (!data?.session) {
         router.push("/login");
@@ -56,6 +58,7 @@ export default function ProfilePage() {
       setCurrentTitle(profile.current_title || "");
       setProfileImage(profile.avatar_url || null);
 
+      // 称号計算（最低限）
       const titles = [];
       const ch = profile.total_chapters || 0;
       const rg = profile.total_registered || 0;
@@ -67,35 +70,38 @@ export default function ProfilePage() {
       setAvailableTitles(titles);
     };
 
-    load();
+    loadProfile();
   }, [router, supabase]);
 
+  // =========================
   // 画像アップロード
+  // =========================
   const handleImageUpload = async (e) => {
     if (!userId) return;
     const file = e.target.files?.[0];
     if (!file) return;
 
     setUploading(true);
-
     try {
       const filePath = `${userId}/${Date.now()}-${file.name}`;
 
-      const { error: uploadError } = await supabase.storage
+      const { error } = await supabase.storage
         .from("avatars")
         .upload(filePath, file, { upsert: true });
 
-      if (uploadError) throw uploadError;
+      if (error) throw error;
 
-      const { data } = supabase.storage.from("avatars").getPublicUrl(filePath);
+      const { data } = supabase.storage
+        .from("avatars")
+        .getPublicUrl(filePath);
+
       const url = data.publicUrl;
-
       setProfileImage(url);
 
-      await supabase
-        .from("profiles")
-        .update({ avatar_url: url })
-        .eq("id", userId);
+      await supabase.from("profiles").update({
+        avatar_url: url,
+      }).eq("id", userId);
+
     } catch (err) {
       console.error(err);
       alert("画像保存失敗");
@@ -104,11 +110,13 @@ export default function ProfilePage() {
     }
   };
 
+  // =========================
   // 保存
+  // =========================
   const handleSave = async () => {
     if (!userId) return;
-    setSaving(true);
 
+    setSaving(true);
     const { error } = await supabase
       .from("profiles")
       .update({
@@ -124,62 +132,76 @@ export default function ProfilePage() {
       console.error(error);
       alert("保存失敗");
     } else {
-      alert("保存しました");
+      alert("プロフィールを更新しました");
       router.push("/");
     }
   };
 
+  // =========================
+  // 表示
+  // =========================
   return (
-    <div className="min-h-screen flex flex-col items-center p-6 bg-gray-100">
-      <div className="bg-white p-6 rounded-xl shadow w-full max-w-md">
-        <h1 className="text-xl font-bold mb-4">プロフィール編集</h1>
+    <div className="min-h-screen bg-gray-100 flex justify-center items-center p-6">
+      <div className="bg-white p-6 rounded-xl shadow-md w-full max-w-md">
+        <h1 className="text-xl font-bold mb-4 text-center">プロフィール編集</h1>
 
         {/* アイコン */}
-        <div className={`w-24 h-24 mx-auto rounded-full border-4 ${iconFrame}`}>
-          {profileImage ? (
-            <img
-              src={profileImage}
-              className="w-full h-full rounded-full object-cover"
-            />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center text-3xl">
-              👤
-            </div>
-          )}
+        <div className="text-center mb-4">
+          <div
+            className={`w-24 h-24 mx-auto rounded-full border-4 flex items-center justify-center text-3xl ${iconFrame}`}
+          >
+            {profileImage ? (
+              <img
+                src={profileImage}
+                className="w-full h-full rounded-full object-cover"
+              />
+            ) : (
+              "👤"
+            )}
+          </div>
+          <input type="file" onChange={handleImageUpload} className="mt-2 text-sm" />
+          {uploading && <p className="text-xs text-gray-500">アップロード中…</p>}
         </div>
-
-        <input
-          type="file"
-          onChange={handleImageUpload}
-          className="mt-2 text-sm"
-        />
 
         {/* ニックネーム */}
         <input
-          className="border p-2 w-full mt-4 rounded"
           value={nickname}
           onChange={(e) => setNickname(e.target.value)}
+          className="border p-2 w-full rounded mb-3"
           placeholder="ニックネーム"
         />
 
+        {/* 枠 */}
+        <div className="grid grid-cols-4 gap-2 mb-3">
+          {frames.map((f) => (
+            <button
+              key={f.id}
+              onClick={() => setIconFrame(f.id)}
+              className={`p-2 border rounded ${
+                iconFrame === f.id ? "border-blue-500" : "border-gray-300"
+              }`}
+            >
+              <div className={`w-8 h-8 mx-auto ${f.id}`}>👤</div>
+            </button>
+          ))}
+        </div>
+
         {/* 称号 */}
         <select
-          className="border p-2 w-full mt-4 rounded"
-          value={currentTitle || ""}
+          value={currentTitle}
           onChange={(e) => setCurrentTitle(e.target.value)}
+          className="border p-2 w-full rounded mb-4"
         >
           <option value="">称号なし</option>
           {availableTitles.map((t) => (
-            <option key={t} value={t}>
-              {t}
-            </option>
+            <option key={t} value={t}>{t}</option>
           ))}
         </select>
 
         <button
           onClick={handleSave}
           disabled={saving}
-          className="mt-6 w-full bg-blue-500 text-white py-2 rounded"
+          className="w-full bg-blue-500 text-white py-2 rounded"
         >
           {saving ? "保存中..." : "保存"}
         </button>
