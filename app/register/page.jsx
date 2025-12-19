@@ -1,4 +1,5 @@
 "use client";
+
 import { useState } from "react";
 import { supabaseBrowser } from "@/utils/supabase/client";
 
@@ -7,13 +8,14 @@ export default function RegisterPage() {
   const [input, setInput] = useState("");
 
   const submit = async () => {
-    const tokens = input.split(/\s+/);
-    for (let i = 0; i < tokens.length; i += 2) {
-      if (!/^[0-9]+$/.test(tokens[i + 1])) continue;
+    const parts = input.split(/\s+/);
+    for (let i = 0; i < parts.length; i += 2) {
+      if (!/^\d+$/.test(parts[i + 1])) continue;
 
-      await supabase.from("mangas").insert({
-        title: tokens[i],
-        chapters: Number(tokens[i + 1]),
+      await supabase.from("manga_logs").insert({
+        title: parts[i],
+        chapters: Number(parts[i + 1]),
+        favorite: false,
       });
     }
     setInput("");
@@ -22,17 +24,18 @@ export default function RegisterPage() {
 
   return (
     <main className="p-6">
-      <div className="bg-white p-6 rounded shadow">
-        <textarea
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          className="w-full border p-2"
-          placeholder="ワンピース 64 青の祓魔師 24"
-        />
-        <button onClick={submit} className="mt-4 bg-teal-400 text-white px-4 py-2 rounded">
-          登録
-        </button>
-      </div>
+      <textarea
+        className="border w-full h-40 p-2"
+        placeholder="例）ワンピース 64 青の祓魔師 24"
+        value={input}
+        onChange={(e) => setInput(e.target.value)}
+      />
+      <button
+        onClick={submit}
+        className="mt-4 bg-sky-400 text-white px-4 py-2 rounded"
+      >
+        登録
+      </button>
     </main>
   );
 }

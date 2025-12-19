@@ -1,4 +1,5 @@
 "use client";
+
 import { useEffect, useState } from "react";
 import { supabaseBrowser } from "@/utils/supabase/client";
 
@@ -8,7 +9,7 @@ export default function FavoritesPage() {
 
   useEffect(() => {
     supabase
-      .from("mangas")
+      .from("manga_logs")
       .select("*")
       .eq("favorite", true)
       .then(({ data }) => setList(data || []));
@@ -16,12 +17,12 @@ export default function FavoritesPage() {
 
   return (
     <main className="p-6">
-      <h1 className="text-xl mb-4">★ お気に入り</h1>
-      <ul className="bg-white rounded shadow p-4">
-        {list.map((m) => (
-          <li key={m.id}>{m.title}（{m.chapters}話）</li>
-        ))}
-      </ul>
+      <h1 className="text-xl font-bold mb-4">お気に入り</h1>
+      {list.map(m => (
+        <div key={m.id} className="bg-white p-3 mb-2 rounded shadow">
+          {m.title}（{m.chapters}話）
+        </div>
+      ))}
     </main>
   );
 }
