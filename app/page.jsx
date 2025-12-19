@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { supabaseBrowser } from "@/utils/supabase/client";
 import Link from "next/link";
-import UserHeader from "./components/UserHeader";
+import UserHeader from "@/components/UserHeader";
 
 export default function HomePage() {
   const supabase = supabaseBrowser();
@@ -41,7 +41,7 @@ export default function HomePage() {
   const totalTitles = mangas.length;
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-pink-100 via-sky-100 to-green-100 p-6">
+    <main className="min-h-screen bg-gradient-to-br from-sky-100 to-green-100 p-6">
       <header className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-sky-600">📚 Manga管理</h1>
         <UserHeader />
