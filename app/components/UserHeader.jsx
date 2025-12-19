@@ -1,71 +1,55 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Image from "next/image";
 import { supabaseBrowser } from "@/utils/supabase/client";
+import Link from "next/link";
 
 export default function UserHeader() {
   const supabase = supabaseBrowser();
   const [avatarUrl, setAvatarUrl] = useState("/avatar.png");
 
   useEffect(() => {
-    const loadUser = async () => {
+    const loadAvatar = async () => {
       const {
-        data: { user },
-      } = await supabase.auth.getUser();
+        data: { session },
+      } = await supabase.auth.getSession();
 
-      if (user?.user_metadata?.avatar_url) {
-        setAvatarUrl(user.user_metadata.avatar_url);
+      if (!session) return;
+
+      // 将来 user_metadata.avatar_url があればそっちを使う
+      const userAvatar = session.user.user_metadata?.avatar_url;
+      if (userAvatar) {
+        setAvatarUrl(userAvatar);
       }
     };
 
-    loadUser();
+    loadAvatar();
   }, []);
-
-  const onFileChange = async (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    const filePath = `${user.id}-${Date.now()}.png`;
-
-    await supabase.storage
-      .from("avatars")
-      .upload(filePath, file, { upsert: true });
-
-    const { data } = supabase.storage
-      .from("avatars")
-      .getPublicUrl(filePath);
-
-    const publicUrl = data.publicUrl;
-
-    await supabase.auth.updateUser({
-      data: { avatar_url: publicUrl },
-    });
-
-    setAvatarUrl(publicUrl);
-  };
 
   return (
     <div className="flex items-center gap-3">
-      <label className="cursor-pointer">
-        <Image
-          src={avatarUrl}
-          alt="user icon"
-          width={40}
-          height={40}
-          className="rounded-full border"
-        />
-        <input
-          type="file"
-          accept="image/*"
-          className="hidden"
-          onChange={onFileChange}
-        />
-      </label>
+      <img
+        src={avatarUrl}
+        alt="avatar"
+        className="w-10 h-10 rounded-full border"
+      />
+
+      <Link
+        href="/profile"
+        className="text-sm text-sky-600 hover:underline"
+      >
+        プロフィール
+      </Link>
+
+      <button
+        className="text-sm text-red-500"
+        onClick={async () => {
+          await supabase.auth.signOut();
+          location.reload();
+        }}
+      >
+        ログアウト
+      </button>
     </div>
   );
 }

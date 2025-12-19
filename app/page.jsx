@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { supabaseBrowser } from "@/utils/supabase/client";
 import Link from "next/link";
-import UserHeader from "@/components/UserHeader";
+import UserHeader from "@/app/components/UserHeader";
 
 export default function HomePage() {
   const supabase = supabaseBrowser();
