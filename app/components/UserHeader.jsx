@@ -5,22 +5,29 @@ import { supabaseBrowser } from "@/utils/supabase/client";
 
 export default function UserHeader() {
   const supabase = supabaseBrowser();
-  const [user, setUser] = useState(null);
-  const [avatarUrl, setAvatarUrl] = useState("/avater.png"); // デフォルト
+  const [avatarUrl, setAvatarUrl] = useState("/avater.png");
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
-      if (!data.user) return;
-      setUser(data.user);
+    const loadProfile = async () => {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
 
-      // user_metadata に avatar_url があれば上書き
-      if (data.user.user_metadata?.avatar_url) {
-        setAvatarUrl(data.user.user_metadata.avatar_url);
+      if (!session) return;
+
+      const { data } = await supabase
+        .from("profiles")
+        .select("avatar_url")
+        .eq("id", session.user.id)
+        .single();
+
+      if (data?.avatar_url) {
+        setAvatarUrl(data.avatar_url);
       }
-    });
-  }, []);
+    };
 
-  if (!user) return null;
+    loadProfile();
+  }, []);
 
   return (
     <div className="flex items-center gap-3">
@@ -29,9 +36,6 @@ export default function UserHeader() {
         alt="avatar"
         className="w-10 h-10 rounded-full border"
       />
-      <span className="text-sm font-medium">
-        {user.user_metadata?.name ?? "ユーザー"}
-      </span>
     </div>
   );
 }
