@@ -2,80 +2,110 @@
 
 import { useEffect, useState } from "react";
 import { supabaseBrowser } from "@/utils/supabase/client";
+import Link from "next/link";
 
 export default function HomePage() {
   const supabase = supabaseBrowser();
-  const [list, setList] = useState([]);
-  const [search, setSearch] = useState("");
 
-  const load = async () => {
+  const [session, setSession] = useState(null);
+  const [mangas, setMangas] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  // セッション取得
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      setSession(data.session);
+    });
+  }, []);
+
+  // 一覧取得
+  const fetchMangas = async (userId) => {
     const { data } = await supabase
       .from("manga_logs")
       .select("*")
+      .eq("user_id", userId)
       .order("created_at", { ascending: false });
 
-    setList(data || []);
+    setMangas(data ?? []);
+    setLoading(false);
   };
 
   useEffect(() => {
-    load();
-  }, []);
+    if (!session) return;
+    fetchMangas(session.user.id);
+  }, [session]);
 
-  const toggleFav = async (id, fav) => {
-    await supabase.from("manga_logs").update({ favorite: !fav }).eq("id", id);
-    load();
-  };
+  if (!session) return <div className="p-6">ログイン確認中…</div>;
 
-  const remove = async (id) => {
-    await supabase.from("manga_logs").delete().eq("id", id);
-    load();
-  };
-
-  const filtered = list.filter(l =>
-    l.title.toLowerCase().includes(search.toLowerCase())
-  );
-
-  const totalChapters = list.reduce((a, b) => a + b.chapters, 0);
+  const totalChapters = mangas.reduce((a, b) => a + b.chapters, 0);
+  const totalTitles = mangas.length;
 
   return (
-    <main className="p-6">
-      <input
-        className="border p-2 w-full mb-4"
-        placeholder="検索"
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-      />
+    <main className="min-h-screen bg-gradient-to-br from-sky-100 to-green-100 p-6">
+      {/* 上部バー */}
+      <header className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold text-sky-600">📚 Manga管理</h1>
 
-      <div className="mb-2 text-sm">
-        合計話数：{totalChapters} / 登録数：{list.length}
-      </div>
+        {/* プロフィール */}
+        <ProfileMenu />
+      </header>
 
-      <table className="w-full bg-white rounded shadow">
-        <thead className="bg-sky-100">
-          <tr>
-            <th>タイトル</th>
-            <th>話数</th>
-            <th>お気に入り</th>
-            <th>削除</th>
-          </tr>
-        </thead>
-        <tbody>
-          {filtered.map(m => (
-            <tr key={m.id} className="text-center border-t">
-              <td>{m.title}</td>
-              <td>{m.chapters}</td>
-              <td>
-                <button onClick={() => toggleFav(m.id, m.favorite)}>
-                  {m.favorite ? "★" : "☆"}
-                </button>
-              </td>
-              <td>
-                <button onClick={() => remove(m.id)}>🗑</button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      {/* 集計 */}
+      <section className="bg-white rounded-xl shadow p-4 mb-4">
+        <p>📖 合計話数：<b>{totalChapters}</b></p>
+        <p>📚 登録作品数：<b>{totalTitles}</b></p>
+      </section>
+
+      {/* 登録ボタン */}
+      <Link
+        href="/register"
+        className="inline-block mb-4 px-4 py-2 rounded-full bg-sky-400 text-white shadow hover:bg-sky-500"
+      >
+        ＋ 登録
+      </Link>
+
+      {/* 一覧 */}
+      <section className="bg-white rounded-xl shadow p-4">
+        <h2 className="font-bold mb-2">一覧</h2>
+
+        {loading ? (
+          <p>読み込み中…</p>
+        ) : mangas.length === 0 ? (
+          <p className="text-gray-500">まだ登録されていません</p>
+        ) : (
+          <table className="w-full text-left">
+            <thead>
+              <tr className="border-b">
+                <th>タイトル</th>
+                <th>話数</th>
+                <th>削除</th>
+              </tr>
+            </thead>
+            <tbody>
+              {mangas.map((m) => (
+                <tr key={m.id} className="border-b">
+                  <td>{m.title}</td>
+                  <td>{m.chapters}</td>
+                  <td>
+                    <button
+                      onClick={async () => {
+                        await supabase
+                          .from("manga_logs")
+                          .delete()
+                          .eq("id", m.id);
+                        fetchMangas(session.user.id);
+                      }}
+                      className="text-red-500"
+                    >
+                      削除
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </section>
     </main>
   );
 }
