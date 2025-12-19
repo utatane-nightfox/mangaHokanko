@@ -18,32 +18,23 @@ export default function ProfilePage() {
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
 
-  // ========================
   // プロフィール取得
-  // ========================
   useEffect(() => {
-    const loadProfile = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
+    const load = async () => {
+      const { data } = await supabase.auth.getSession();
+      if (!data.session) {
         router.push("/login");
         return;
       }
 
-      const user = session.user;
-      setUserId(user.id);
+      const uid = data.session.user.id;
+      setUserId(uid);
 
-      const { data: profile, error } = await supabase
+      const { data: profile } = await supabase
         .from("profiles")
-        .select(
-          "nickname, icon_frame, current_title, total_chapters, total_registered, avatar_url"
-        )
-        .eq("id", user.id)
-        .maybeSingle(); // ← single() より安全
-
-      if (error) {
-        console.error("profile load error:", error);
-        return;
-      }
+        .select("*")
+        .eq("id", uid)
+        .maybeSingle();
 
       if (!profile) return;
 
@@ -52,7 +43,6 @@ export default function ProfilePage() {
       setCurrentTitle(profile.current_title ?? "");
       setProfileImage(profile.avatar_url ?? null);
 
-      // 称号判定
       const titles = [];
       const ch = profile.total_chapters ?? 0;
       const rg = profile.total_registered ?? 0;
@@ -61,24 +51,17 @@ export default function ProfilePage() {
       if (ch >= 1000) titles.push("一般読書家");
       if (ch >= 5000) titles.push("中堅読書家");
       if (ch >= 10000) titles.push("プロ読書家");
-      if (ch >= 100000) titles.push("伝導者");
 
       if (rg >= 10) titles.push("放浪研究家");
       if (rg >= 100) titles.push("図書館所属研究家");
-      if (rg >= 500) titles.push("王宮所属研究家");
-      if (rg >= 1000) titles.push("究明者");
-
-      if (ch >= 100000 && rg >= 1000) titles.push("漫画王");
 
       setAvailableTitles(titles);
     };
 
-    loadProfile();
-  }, [router, supabase]);
+    load();
+  }, [supabase, router]);
 
-  // ========================
   // 画像アップロード
-  // ========================
   const handleImageUpload = async (e) => {
     if (!userId) return;
     const file = e.target.files?.[0];
@@ -86,62 +69,35 @@ export default function ProfilePage() {
 
     setUploading(true);
     try {
-      const filePath = `${userId}/${Date.now()}-${file.name}`;
+      const path = `${userId}/${Date.now()}-${file.name}`;
+      await supabase.storage.from("avatars").upload(path, file, { upsert: true });
+      const { data } = supabase.storage.from("avatars").getPublicUrl(path);
 
-      const { error } = await supabase.storage
-        .from("avatars")
-        .upload(filePath, file, { upsert: true });
-
-      if (error) throw error;
-
-      const { data } = supabase.storage
-        .from("avatars")
-        .getPublicUrl(filePath);
-
-      const url = data.publicUrl;
-      setProfileImage(url);
-
-      await supabase
-        .from("profiles")
-        .update({ avatar_url: url })
-        .eq("id", userId);
-    } catch (err) {
-      console.error(err);
-      alert("画像保存に失敗しました");
+      setProfileImage(data.publicUrl);
+      await supabase.from("profiles").update({ avatar_url: data.publicUrl }).eq("id", userId);
     } finally {
       setUploading(false);
     }
   };
 
-  // ========================
   // 保存
-  // ========================
   const handleSave = async () => {
-    if (!userId) return;
     setSaving(true);
-
-    const { error } = await supabase
+    await supabase
       .from("profiles")
       .update({
         nickname,
         icon_frame: iconFrame,
-        current_title: currentTitle || "",
+        current_title: currentTitle,
       })
       .eq("id", userId);
 
     setSaving(false);
-
-    if (error) {
-      console.error(error);
-      alert("保存に失敗しました");
-    } else {
-      alert("プロフィールを保存しました");
-      router.push("/");
-    }
+    router.push("/");
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100 p-6">
+    <div className="min-h-screen flex justify-center items-center bg-gray-100 p-6">
       <div className="bg-white p-6 rounded-xl shadow w-full max-w-md">
         <h1 className="text-xl font-bold mb-4">プロフィール編集</h1>
 
@@ -153,9 +109,7 @@ export default function ProfilePage() {
               <div className="flex items-center justify-center h-full text-3xl">👤</div>
             )}
           </div>
-
           <input type="file" onChange={handleImageUpload} />
-          {uploading && <p className="text-sm text-gray-500">アップロード中…</p>}
         </div>
 
         <input
@@ -181,7 +135,7 @@ export default function ProfilePage() {
           disabled={saving}
           className="bg-blue-500 text-white w-full py-2 rounded"
         >
-          {saving ? "保存中..." : "保存する"}
+          保存
         </button>
       </div>
     </div>

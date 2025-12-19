@@ -10,55 +10,69 @@ export default function HomePage() {
   const [profile, setProfile] = useState(null);
   const [error, setError] = useState(null);
 
-  // --- セッション取得 ---
+  // セッション監視
   useEffect(() => {
-    const load = async () => {
+    const init = async () => {
       const { data } = await supabase.auth.getSession();
       setSession(data.session);
 
-      supabase.auth.onAuthStateChange((_event, newSession) => {
-        setSession(newSession);
+      supabase.auth.onAuthStateChange((_e, s) => {
+        setSession(s);
       });
     };
-    load();
+    init();
   }, [supabase]);
 
-  // --- プロフィール取得 ---
+  // プロフィール取得 or 作成
   useEffect(() => {
     if (session === undefined) return;
-    if (session === null) {
-      window.location.href = "/login";
+    if (!session) {
+      location.href = "/login";
       return;
     }
 
-    const fetchProfile = async () => {
+    const loadProfile = async () => {
       try {
-        const token = session.access_token;
+        const userId = session.user.id;
 
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/get-or-create-profile`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
+        // 取得
+        const { data, error } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("id", userId)
+          .maybeSingle();
 
-        if (!res.ok) throw new Error("取得失敗");
+        if (error) throw error;
 
-        const data = await res.json();
-        setProfile(data);
+        // なければ作成
+        if (!data) {
+          const { data: created, error: insertError } = await supabase
+            .from("profiles")
+            .insert({
+              id: userId,
+              nickname: "",
+              icon_frame: "none",
+              total_chapters: 0,
+              total_registered: 0,
+            })
+            .select()
+            .single();
+
+          if (insertError) throw insertError;
+          setProfile(created);
+        } else {
+          setProfile(data);
+        }
       } catch (e) {
         console.error(e);
-        setError("プロフィール情報の取得に失敗しました。");
+        setError("プロフィール情報の取得に失敗しました");
       }
     };
 
-    fetchProfile();
-  }, [session]);
+    loadProfile();
+  }, [session, supabase]);
 
-  // --- 表示 ---
-  if (session === undefined) return <div>セッション確認中…</div>;
+  if (session === undefined) return <div>確認中…</div>;
   if (error) return <div className="text-red-500">{error}</div>;
   if (!profile) return <div>読み込み中…</div>;
 
@@ -68,55 +82,36 @@ export default function HomePage() {
     avatar_url,
     total_chapters,
     total_registered,
-    title_unlocked = [],
     current_title,
   } = profile;
 
   return (
     <main className="p-6 min-h-screen bg-gray-50">
-      <section className="bg-white shadow-md rounded-2xl p-6 mb-8">
+      <section className="bg-white rounded-xl p-6 shadow mb-6">
         <div className="flex items-center gap-4">
-          <div className={`relative w-16 h-16 flex items-center justify-center border-2 rounded-full ${icon_frame}`}>
+          <div className={`w-16 h-16 rounded-full border-2 ${icon_frame}`}>
             {avatar_url ? (
-              <img src={avatar_url} className="w-full h-full object-cover rounded-full" />
+              <img src={avatar_url} className="w-full h-full rounded-full object-cover" />
             ) : (
-              <span className="text-2xl">👤</span>
+              <div className="flex items-center justify-center h-full">👤</div>
             )}
           </div>
           <div>
             <h2 className="text-xl font-bold">{nickname || "名無しの読書家"}</h2>
-            <p className="text-gray-500">現在の称号：{current_title || "なし"}</p>
+            <p className="text-gray-500">称号：{current_title || "なし"}</p>
           </div>
         </div>
       </section>
 
-      <section className="bg-white shadow-md rounded-2xl p-6 mb-8">
-        <h3 className="text-lg font-semibold mb-4">📚 現在の進捗</h3>
-        <div className="grid grid-cols-2 gap-6 text-center">
-          <div>
-            <p className="text-3xl font-bold text-blue-600">{total_chapters || 0}</p>
-            <p className="text-gray-500">合計話数</p>
-          </div>
-          <div>
-            <p className="text-3xl font-bold text-green-600">{total_registered || 0}</p>
-            <p className="text-gray-500">合計登録数</p>
-          </div>
+      <section className="bg-white rounded-xl p-6 shadow grid grid-cols-2 text-center">
+        <div>
+          <p className="text-3xl font-bold text-blue-600">{total_chapters}</p>
+          <p>合計話数</p>
         </div>
-      </section>
-
-      <section className="bg-white shadow-md rounded-2xl p-6">
-        <h3 className="text-lg font-semibold mb-4">🏅 獲得済み称号</h3>
-        {title_unlocked.length > 0 ? (
-          <ul className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-            {title_unlocked.map((t, idx) => (
-              <li key={idx} className="bg-gray-100 border rounded-lg px-3 py-2 text-center hover:bg-yellow-50 transition">
-                {t}
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="text-gray-500">まだ称号はありません。</p>
-        )}
+        <div>
+          <p className="text-3xl font-bold text-green-600">{total_registered}</p>
+          <p>登録数</p>
+        </div>
       </section>
     </main>
   );
