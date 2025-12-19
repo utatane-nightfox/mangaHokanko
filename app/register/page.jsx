@@ -12,24 +12,23 @@ export default function RegisterPage() {
   const [chapters, setChapters] = useState("");
 
   const handleSubmit = async () => {
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
+    const { data } = await supabase.auth.getSession();
+    const user = data.session?.user;
+    if (!user) return;
 
     await supabase.from("manga_logs").insert({
-      user_id: session.user.id,
+      user_id: user.id,
       title,
       chapters: Number(chapters),
     });
 
-    alert("登録しました");
     router.push("/");
   };
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-green-100 to-sky-100 p-6">
-      <div className="bg-white rounded-xl shadow p-6 max-w-md mx-auto">
-        <h1 className="text-xl font-bold mb-4">📖 登録</h1>
+    <div className="min-h-screen bg-gradient-to-br from-green-100 to-sky-100 flex items-center justify-center">
+      <div className="bg-white p-6 rounded-xl shadow w-full max-w-md">
+        <h1 className="font-bold mb-4">📘 漫画登録</h1>
 
         <input
           className="border p-2 w-full mb-3"
@@ -47,11 +46,11 @@ export default function RegisterPage() {
 
         <button
           onClick={handleSubmit}
-          className="bg-green-400 text-white w-full py-2 rounded"
+          className="bg-sky-400 text-white w-full py-2 rounded"
         >
-          登録
+          登録する
         </button>
       </div>
-    </main>
+    </div>
   );
 }

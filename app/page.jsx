@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { supabaseBrowser } from "@/utils/supabase/client";
 import Link from "next/link";
+import ProfileMenu from "@/components/ProfileMenu";
 
 export default function HomePage() {
   const supabase = supabaseBrowser();
@@ -11,15 +12,14 @@ export default function HomePage() {
   const [mangas, setMangas] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // セッション取得
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
       setSession(data.session);
     });
   }, []);
 
-  // 一覧取得
   const fetchMangas = async (userId) => {
+    setLoading(true);
     const { data } = await supabase
       .from("manga_logs")
       .select("*")
@@ -42,21 +42,16 @@ export default function HomePage() {
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-sky-100 to-green-100 p-6">
-      {/* 上部バー */}
       <header className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-sky-600">📚 Manga管理</h1>
-
-        {/* プロフィール */}
         <ProfileMenu />
       </header>
 
-      {/* 集計 */}
       <section className="bg-white rounded-xl shadow p-4 mb-4">
         <p>📖 合計話数：<b>{totalChapters}</b></p>
         <p>📚 登録作品数：<b>{totalTitles}</b></p>
       </section>
 
-      {/* 登録ボタン */}
       <Link
         href="/register"
         className="inline-block mb-4 px-4 py-2 rounded-full bg-sky-400 text-white shadow hover:bg-sky-500"
@@ -64,7 +59,6 @@ export default function HomePage() {
         ＋ 登録
       </Link>
 
-      {/* 一覧 */}
       <section className="bg-white rounded-xl shadow p-4">
         <h2 className="font-bold mb-2">一覧</h2>
 
@@ -73,7 +67,7 @@ export default function HomePage() {
         ) : mangas.length === 0 ? (
           <p className="text-gray-500">まだ登録されていません</p>
         ) : (
-          <table className="w-full text-left">
+          <table className="w-full">
             <thead>
               <tr className="border-b">
                 <th>タイトル</th>
@@ -88,14 +82,11 @@ export default function HomePage() {
                   <td>{m.chapters}</td>
                   <td>
                     <button
+                      className="text-red-500"
                       onClick={async () => {
-                        await supabase
-                          .from("manga_logs")
-                          .delete()
-                          .eq("id", m.id);
+                        await supabase.from("manga_logs").delete().eq("id", m.id);
                         fetchMangas(session.user.id);
                       }}
-                      className="text-red-500"
                     >
                       削除
                     </button>
