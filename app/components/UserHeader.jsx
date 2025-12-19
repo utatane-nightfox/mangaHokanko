@@ -2,29 +2,25 @@
 
 import { useEffect, useState } from "react";
 import { supabaseBrowser } from "@/utils/supabase/client";
-import Link from "next/link";
 
 export default function UserHeader() {
   const supabase = supabaseBrowser();
-  const [avatarUrl, setAvatarUrl] = useState("/avatar.png");
+  const [user, setUser] = useState(null);
+  const [avatarUrl, setAvatarUrl] = useState("/avater.png"); // デフォルト
 
   useEffect(() => {
-    const loadAvatar = async () => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
+    supabase.auth.getUser().then(({ data }) => {
+      if (!data.user) return;
+      setUser(data.user);
 
-      if (!session) return;
-
-      // 将来 user_metadata.avatar_url があればそっちを使う
-      const userAvatar = session.user.user_metadata?.avatar_url;
-      if (userAvatar) {
-        setAvatarUrl(userAvatar);
+      // user_metadata に avatar_url があれば上書き
+      if (data.user.user_metadata?.avatar_url) {
+        setAvatarUrl(data.user.user_metadata.avatar_url);
       }
-    };
-
-    loadAvatar();
+    });
   }, []);
+
+  if (!user) return null;
 
   return (
     <div className="flex items-center gap-3">
@@ -33,23 +29,9 @@ export default function UserHeader() {
         alt="avatar"
         className="w-10 h-10 rounded-full border"
       />
-
-      <Link
-        href="/profile"
-        className="text-sm text-sky-600 hover:underline"
-      >
-        プロフィール
-      </Link>
-
-      <button
-        className="text-sm text-red-500"
-        onClick={async () => {
-          await supabase.auth.signOut();
-          location.reload();
-        }}
-      >
-        ログアウト
-      </button>
+      <span className="text-sm font-medium">
+        {user.user_metadata?.name ?? "ユーザー"}
+      </span>
     </div>
   );
 }
