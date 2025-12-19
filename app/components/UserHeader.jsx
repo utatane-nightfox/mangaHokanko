@@ -1,16 +1,16 @@
 "use client";
 
-export default function UserHeader({ user, avatarUrl }) {
+export default function UserHeader({ user }) {
   return (
-    <header style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+    <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
       <img
-        src={avatarUrl || "/avatar.png"}
+        src="/avatar.png"
         alt="avatar"
         width={40}
         height={40}
         style={{ borderRadius: "50%" }}
       />
-      <span>{user?.email ?? "ゲスト"}</span>
-    </header>
+      <span>{user.email}</span>
+    </div>
   );
 }
