@@ -4,35 +4,35 @@ import { supabaseBrowser } from "@/utils/supabase/client";
 
 export default function RegisterPage() {
   const supabase = supabaseBrowser();
-  const [title, setTitle] = useState("");
-  const [episode, setEpisode] = useState("");
+  const [input, setInput] = useState("");
 
-  const submit = async (e) => {
-    e.preventDefault();
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) return;
+  const submit = async () => {
+    const tokens = input.split(/\s+/);
+    for (let i = 0; i < tokens.length; i += 2) {
+      if (!/^[0-9]+$/.test(tokens[i + 1])) continue;
 
-    if (!/^\d+$/.test(episode)) {
-      alert("話数は半角数字");
-      return;
+      await supabase.from("mangas").insert({
+        title: tokens[i],
+        chapters: Number(tokens[i + 1]),
+      });
     }
-
-    await supabase.from("mangahokanko").insert({
-      user_id: session.user.id,
-      title,
-      episode: Number(episode),
-      favorite: false,
-    });
-
-    setTitle("");
-    setEpisode("");
+    setInput("");
+    alert("登録完了");
   };
 
   return (
-    <form onSubmit={submit} className="p-6 bg-white max-w-md mx-auto">
-      <input value={title} onChange={e=>setTitle(e.target.value)} placeholder="タイトル" className="border p-2 w-full mb-2"/>
-      <input value={episode} onChange={e=>setEpisode(e.target.value)} placeholder="話数" className="border p-2 w-full mb-2"/>
-      <button className="bg-green-500 text-white w-full py-2">登録</button>
-    </form>
+    <main className="p-6">
+      <div className="bg-white p-6 rounded shadow">
+        <textarea
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          className="w-full border p-2"
+          placeholder="ワンピース 64 青の祓魔師 24"
+        />
+        <button onClick={submit} className="mt-4 bg-teal-400 text-white px-4 py-2 rounded">
+          登録
+        </button>
+      </div>
+    </main>
   );
 }

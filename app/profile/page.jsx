@@ -1,41 +1,36 @@
 "use client";
 import { useEffect, useState } from "react";
 import { supabaseBrowser } from "@/utils/supabase/client";
-import { useRouter } from "next/navigation";
 
 export default function ProfilePage() {
   const supabase = supabaseBrowser();
-  const router = useRouter();
-  const [nickname, setNickname] = useState("");
+  const [profile, setProfile] = useState(null);
 
   useEffect(() => {
-    const load = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) return router.push("/login");
-
-      const { data } = await supabase
-        .from("profiles")
-        .select("nickname")
-        .eq("id", session.user.id)
-        .maybeSingle();
-
-      if (data) setNickname(data.nickname ?? "");
-    };
-    load();
+    supabase.auth.getUser().then(async ({ data }) => {
+      const { data: p } = await supabase.from("profiles").select("*").eq("id", data.user.id).single();
+      setProfile(p);
+    });
   }, []);
 
-  const save = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    await supabase.from("profiles")
-      .update({ nickname })
-      .eq("id", session.user.id);
-    router.push("/");
+  const upload = async (e) => {
+    const file = e.target.files[0];
+    const path = `${profile.id}/${file.name}`;
+    await supabase.storage.from("avatars").upload(path, file, { upsert: true });
+    const url = supabase.storage.from("avatars").getPublicUrl(path).data.publicUrl;
+    await supabase.from("profiles").update({ avatar_url: url }).eq("id", profile.id);
+    setProfile({ ...profile, avatar_url: url });
   };
 
+  if (!profile) return null;
+
   return (
-    <div className="p-6 max-w-md mx-auto bg-white">
-      <input className="border p-2 w-full" value={nickname} onChange={e=>setNickname(e.target.value)} />
-      <button onClick={save} className="mt-3 bg-blue-500 text-white w-full py-2">保存</button>
-    </div>
+    <main className="p-6">
+      <div className="bg-white p-6 rounded shadow">
+        <img src={profile.avatar_url} className="w-24 h-24 rounded-full mx-auto" />
+        <input type="file" onChange={upload} />
+        <p className="text-center mt-2">称号：{profile.current_title || "なし"}</p>
+      </div>
+    </main>
   );
 }
