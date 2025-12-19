@@ -1,118 +1,80 @@
 "use client";
-
 import { useEffect, useState } from "react";
 import { supabaseBrowser } from "@/utils/supabase/client";
 
 export default function HomePage() {
   const supabase = supabaseBrowser();
+  const [list, setList] = useState([]);
+  const [query, setQuery] = useState("");
+  const [sort, setSort] = useState("created_at");
 
-  const [session, setSession] = useState(undefined);
-  const [profile, setProfile] = useState(null);
-  const [error, setError] = useState(null);
+  const load = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return;
 
-  // セッション監視
-  useEffect(() => {
-    const init = async () => {
-      const { data } = await supabase.auth.getSession();
-      setSession(data.session);
+    const { data } = await supabase
+      .from("mangahokanko")
+      .select("*")
+      .eq("user_id", session.user.id)
+      .ilike("title", `%${query}%`)
+      .order(sort, { ascending: sort === "title" });
 
-      supabase.auth.onAuthStateChange((_e, s) => {
-        setSession(s);
-      });
-    };
-    init();
-  }, [supabase]);
+    setList(data ?? []);
+  };
 
-  // プロフィール取得 or 作成
-  useEffect(() => {
-    if (session === undefined) return;
-    if (!session) {
-      location.href = "/login";
-      return;
-    }
+  useEffect(() => { load(); }, [query, sort]);
 
-    const loadProfile = async () => {
-      try {
-        const userId = session.user.id;
+  const toggleFav = async (id, v) => {
+    await supabase.from("mangahokanko")
+      .update({ favorite: !v })
+      .eq("id", id);
+    load();
+  };
 
-        // 取得
-        const { data, error } = await supabase
-          .from("profiles")
-          .select("*")
-          .eq("id", userId)
-          .maybeSingle();
-
-        if (error) throw error;
-
-        // なければ作成
-        if (!data) {
-          const { data: created, error: insertError } = await supabase
-            .from("profiles")
-            .insert({
-              id: userId,
-              nickname: "",
-              icon_frame: "none",
-              total_chapters: 0,
-              total_registered: 0,
-            })
-            .select()
-            .single();
-
-          if (insertError) throw insertError;
-          setProfile(created);
-        } else {
-          setProfile(data);
-        }
-      } catch (e) {
-        console.error(e);
-        setError("プロフィール情報の取得に失敗しました");
-      }
-    };
-
-    loadProfile();
-  }, [session, supabase]);
-
-  if (session === undefined) return <div>確認中…</div>;
-  if (error) return <div className="text-red-500">{error}</div>;
-  if (!profile) return <div>読み込み中…</div>;
-
-  const {
-    nickname,
-    icon_frame,
-    avatar_url,
-    total_chapters,
-    total_registered,
-    current_title,
-  } = profile;
+  const del = async (id) => {
+    if (!confirm("削除しますか？")) return;
+    await supabase.from("mangahokanko").delete().eq("id", id);
+    load();
+  };
 
   return (
-    <main className="p-6 min-h-screen bg-gray-50">
-      <section className="bg-white rounded-xl p-6 shadow mb-6">
-        <div className="flex items-center gap-4">
-          <div className={`w-16 h-16 rounded-full border-2 ${icon_frame}`}>
-            {avatar_url ? (
-              <img src={avatar_url} className="w-full h-full rounded-full object-cover" />
-            ) : (
-              <div className="flex items-center justify-center h-full">👤</div>
-            )}
-          </div>
-          <div>
-            <h2 className="text-xl font-bold">{nickname || "名無しの読書家"}</h2>
-            <p className="text-gray-500">称号：{current_title || "なし"}</p>
-          </div>
-        </div>
-      </section>
+    <div className="p-6">
+      <input
+        className="border p-2 w-full mb-4"
+        placeholder="検索"
+        value={query}
+        onChange={e => setQuery(e.target.value)}
+      />
 
-      <section className="bg-white rounded-xl p-6 shadow grid grid-cols-2 text-center">
-        <div>
-          <p className="text-3xl font-bold text-blue-600">{total_chapters}</p>
-          <p>合計話数</p>
-        </div>
-        <div>
-          <p className="text-3xl font-bold text-green-600">{total_registered}</p>
-          <p>登録数</p>
-        </div>
-      </section>
-    </main>
+      <div className="flex justify-end gap-2 mb-2">
+        <button onClick={() => setSort("created_at")}>登録順</button>
+        <button onClick={() => setSort("title")}>名前順</button>
+      </div>
+
+      <table className="w-full bg-white border">
+        <thead>
+          <tr>
+            <th>タイトル</th>
+            <th>話数</th>
+            <th>★</th>
+            <th>削除</th>
+          </tr>
+        </thead>
+        <tbody>
+          {list.map(m => (
+            <tr key={m.id} className="border-t">
+              <td>{m.title}</td>
+              <td>{m.episode}</td>
+              <td onClick={() => toggleFav(m.id, m.favorite)}>
+                {m.favorite ? "★" : "☆"}
+              </td>
+              <td>
+                <button onClick={() => del(m.id)}>🗑</button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   );
 }

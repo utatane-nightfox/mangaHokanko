@@ -1,5 +1,4 @@
 "use client";
-
 import { useState } from "react";
 import { supabaseBrowser } from "@/utils/supabase/client";
 
@@ -8,58 +7,32 @@ export default function RegisterPage() {
   const [title, setTitle] = useState("");
   const [episode, setEpisode] = useState("");
 
-  const handleSubmit = async (e) => {
+  const submit = async (e) => {
     e.preventDefault();
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return;
 
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
-
-    if (!session) {
-      alert("ログインしてください");
+    if (!/^\d+$/.test(episode)) {
+      alert("話数は半角数字");
       return;
     }
 
-    const parsedEpisode = Number(episode);
-    if (!title || Number.isNaN(parsedEpisode)) {
-      alert("入力エラー");
-      return;
-    }
-
-    const { error } = await supabase
-      .from("mangahokanko")
-      .insert({
-        user_id: session.user.id,
-        title: title.trim(),
-        episode: parsedEpisode,
-        favorite: false,
-      });
-
-    if (error) {
-      console.error(error);
-      alert("登録失敗");
-      return;
-    }
+    await supabase.from("mangahokanko").insert({
+      user_id: session.user.id,
+      title,
+      episode: Number(episode),
+      favorite: false,
+    });
 
     setTitle("");
     setEpisode("");
-    alert("登録しました");
   };
 
   return (
-    <form onSubmit={handleSubmit}>
-      <input
-        placeholder="タイトル"
-        value={title}
-        onChange={(e) => setTitle(e.target.value)}
-      />
-      <input
-        placeholder="話数"
-        type="number"
-        value={episode}
-        onChange={(e) => setEpisode(e.target.value)}
-      />
-      <button type="submit">登録</button>
+    <form onSubmit={submit} className="p-6 bg-white max-w-md mx-auto">
+      <input value={title} onChange={e=>setTitle(e.target.value)} placeholder="タイトル" className="border p-2 w-full mb-2"/>
+      <input value={episode} onChange={e=>setEpisode(e.target.value)} placeholder="話数" className="border p-2 w-full mb-2"/>
+      <button className="bg-green-500 text-white w-full py-2">登録</button>
     </form>
   );
 }
