@@ -1,11 +1,16 @@
 "use client";
+
 import { supabaseBrowser } from "@/utils/supabase/client";
 
 export default function MangaTable({ mangas, reload }) {
   const supabase = supabaseBrowser();
 
   const toggleFav = async (m) => {
-    await supabase.from("mangas").update({ favorite: !m.favorite }).eq("id", m.id);
+    await supabase
+      .from("mangas")
+      .update({ favorite: !m.favorite })
+      .eq("id", m.id);
+
     reload();
   };
 
@@ -20,7 +25,7 @@ export default function MangaTable({ mangas, reload }) {
         <tr>
           <th>タイトル</th>
           <th>話数</th>
-          <th>お気に入り</th>
+          <th>★</th>
           <th>削除</th>
         </tr>
       </thead>
@@ -29,7 +34,10 @@ export default function MangaTable({ mangas, reload }) {
           <tr key={m.id} className="text-center">
             <td>{m.title}</td>
             <td>{m.chapters}</td>
-            <td onClick={() => toggleFav(m)} className="cursor-pointer">
+            <td
+              onClick={() => toggleFav(m)}
+              className="cursor-pointer"
+            >
               {m.favorite ? "★" : "☆"}
             </td>
             <td>
