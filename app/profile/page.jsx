@@ -1,56 +1,90 @@
 "use client";
-import { useState, useEffect } from "react";
+
+import { useEffect, useState } from "react";
 import { supabaseBrowser } from "@/utils/supabase/client";
 
 export default function ProfilePage() {
   const supabase = supabaseBrowser();
-  const [file, setFile] = useState(null);
   const [user, setUser] = useState(null);
+  const [profile, setProfile] = useState(null);
+  const [file, setFile] = useState(null);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
+    const load = async () => {
+      const { data } = await supabase.auth.getUser();
+      if (!data.user) return;
       setUser(data.user);
-    });
+
+      const { data: p } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", data.user.id)
+        .single();
+
+      setProfile(p);
+    };
+    load();
   }, []);
 
   const saveAvatar = async () => {
     if (!file || !user) return;
 
-    const path = `${user.id}/avatar.png`;
+    setSaving(true);
 
+    /* =========================
+       ① storage に上書き
+    ========================= */
     await supabase.storage
       .from("avatars")
-      .upload(path, file, { upsert: true });
+      .upload(`${user.id}/avatar.png`, file, {
+        upsert: true,
+        contentType: file.type,
+      });
 
     const { data } = supabase.storage
       .from("avatars")
-      .getPublicUrl(path);
+      .getPublicUrl(`${user.id}/avatar.png`);
 
+    /* =========================
+       ② profiles にURL保存
+    ========================= */
     await supabase
       .from("profiles")
       .update({ avatar_url: data.publicUrl })
       .eq("id", user.id);
 
-    alert("保存しました");
-    location.reload();
+    setProfile({ ...profile, avatar_url: data.publicUrl });
+    setSaving(false);
   };
 
+  if (!profile) return null;
+
   return (
-    <div className="max-w-xl mx-auto mt-10 bg-white p-6 rounded-xl shadow">
-      <h2 className="text-xl font-bold mb-4">プロフィール</h2>
+    <main className="min-h-screen flex justify-center pt-24">
+      <div className="w-full max-w-xl bg-white p-8 rounded-xl shadow">
+        <h1 className="text-xl font-bold mb-6">プロフィール</h1>
 
-      <input
-        type="file"
-        accept="image/*"
-        onChange={(e) => setFile(e.target.files[0])}
-      />
+        <img
+          src={profile.avatar_url || "/avatar.png"}
+          className="w-32 h-32 rounded-full mx-auto mb-4"
+        />
 
-      <button
-        onClick={saveAvatar}
-        className="mt-4 px-4 py-2 bg-blue-500 text-white rounded"
-      >
-        保存
-      </button>
-    </div>
+        <input
+          type="file"
+          accept="image/*"
+          onChange={(e) => setFile(e.target.files[0])}
+          className="mb-4"
+        />
+
+        <button
+          onClick={saveAvatar}
+          disabled={saving}
+          className="w-full bg-green-500 text-white py-2 rounded"
+        >
+          {saving ? "保存中…" : "保存"}
+        </button>
+      </div>
+    </main>
   );
 }
