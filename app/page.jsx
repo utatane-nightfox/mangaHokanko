@@ -7,33 +7,16 @@ import UserHeader from "@/components/UserHeader";
 
 export default function HomePage() {
   const supabase = supabaseBrowser();
-  const [session, setSession] = useState(undefined); // ← 重要
-  const [mangas, setMangas] = useState([]);
+  const [session, setSession] = useState(undefined);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
-      setSession(data.session); // null でも OK
-      setLoading(false);        // ← 確認完了
+      setSession(data.session);
+      setLoading(false);
     });
   }, []);
 
-  const fetchMangas = async (userId) => {
-    const { data } = await supabase
-      .from("manga_logs")
-      .select("*")
-      .eq("user_id", userId)
-      .order("created_at", { ascending: false });
-
-    setMangas(data ?? []);
-  };
-
-  useEffect(() => {
-    if (!session) return;
-    fetchMangas(session.user.id);
-  }, [session]);
-
-  // 🔽 ここが超重要
   if (loading) {
     return <div className="p-6">ログイン確認中…</div>;
   }
@@ -46,6 +29,8 @@ export default function HomePage() {
     <main className="min-h-screen bg-gradient-to-br from-sky-100 to-green-100 p-6">
       <header className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-sky-600">📚 Manga管理</h1>
+
+        {/* user を渡すのが重要 */}
         <UserHeader user={session.user} />
       </header>
 

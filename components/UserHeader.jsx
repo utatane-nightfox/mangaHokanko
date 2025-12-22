@@ -5,37 +5,49 @@ import { supabaseBrowser } from "@/utils/supabase/client";
 
 export default function UserHeader() {
   const supabase = supabaseBrowser();
-  const [avatarUrl, setAvatarUrl] = useState("/avater.png");
+  const [user, setUser] = useState(null);
+  const [open, setOpen] = useState(false);
 
   useEffect(() => {
-    const loadProfile = async () => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-
-      if (!session) return;
-
-      const { data } = await supabase
-        .from("profiles")
-        .select("avatar_url")
-        .eq("id", session.user.id)
-        .single();
-
-      if (data?.avatar_url) {
-        setAvatarUrl(data.avatar_url);
-      }
-    };
-
-    loadProfile();
+    supabase.auth.getUser().then(({ data }) => {
+      setUser(data.user);
+    });
   }, []);
 
   return (
-    <div className="flex items-center gap-3">
-      <img
-        src={avatarUrl}
-        alt="avatar"
-        className="w-10 h-10 rounded-full border"
-      />
+    <div className="relative">
+      {/* アイコン */}
+      <button
+        onClick={() => setOpen(!open)}
+        className="flex items-center gap-2"
+      >
+        <img
+          src="/avatar.png"
+          alt="avatar"
+          className="w-10 h-10 rounded-full border"
+        />
+      </button>
+
+      {/* メニュー */}
+      {open && (
+        <div className="absolute right-0 mt-2 w-40 bg-white rounded shadow">
+          <a
+            href="/profile"
+            className="block px-4 py-2 hover:bg-gray-100"
+          >
+            プロフィール
+          </a>
+          <button
+            onClick={async () => {
+              await supabase.auth.signOut();
+              location.reload();
+            }}
+            className="block w-full text-left px-4 py-2 hover:bg-gray-100"
+          >
+            ログアウト
+          </button>
+        </div>
+      )}
     </div>
   );
 }
