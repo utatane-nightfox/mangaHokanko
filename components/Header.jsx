@@ -1,7 +1,5 @@
 "use client";
-
 import Link from "next/link";
-import UserHeader from "@/components/UserHeader";
 
 export default function Header() {
   return (
@@ -11,7 +9,11 @@ export default function Header() {
         <Link href="/register">登録</Link>
         <Link href="/favorites">お気に入り</Link>
       </div>
-      <UserHeader />
+
+      {/* 右側は UserHeader を呼ぶだけ */}
+      <div>
+        {/* ここに UserHeader を置く */}
+      </div>
     </header>
   );
 }

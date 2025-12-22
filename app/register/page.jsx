@@ -11,46 +11,76 @@ export default function RegisterPage() {
   const [title, setTitle] = useState("");
   const [chapters, setChapters] = useState("");
 
-  const handleSubmit = async () => {
-    const { data } = await supabase.auth.getSession();
-    const user = data.session?.user;
-    if (!user) return;
+  const submit = async (e) => {
+    e.preventDefault();
 
-    await supabase.from("manga_logs").insert({
-      user_id: user.id,
-      title,
-      chapters: Number(chapters),
-    });
+    // ログインユーザー取得
+    const { data: auth } = await supabase.auth.getUser();
+    const user = auth.user;
+    if (!user) return alert("未ログイン");
+
+    /* ----------------------------
+       ① 漫画を登録（404の修正点）
+    ---------------------------- */
+    const { error: insertError } = await supabase
+      .from("mangas") // ← manga_logs ではない！
+      .insert({
+        user_id: user.id,
+        title,
+        chapters: Number(chapters),
+      });
+
+    if (insertError) {
+      console.error(insertError);
+      alert("漫画登録に失敗");
+      return;
+    }
+
+    /* ----------------------------
+       ② プロフィールのカウント更新
+       （RPCなし版：安全）
+    ---------------------------- */
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("total_registered, total_chapters")
+      .eq("id", user.id)
+      .single();
+
+    await supabase
+      .from("profiles")
+      .update({
+        total_registered: (profile.total_registered || 0) + 1,
+        total_chapters: (profile.total_chapters || 0) + Number(chapters),
+      })
+      .eq("id", user.id);
 
     router.push("/");
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-100 to-sky-100 flex items-center justify-center">
-      <div className="bg-white p-6 rounded-xl shadow w-full max-w-md">
-        <h1 className="font-bold mb-4">📘 漫画登録</h1>
+    <form onSubmit={submit} className="p-6 max-w-md mx-auto space-y-4">
+      <h2 className="text-xl font-bold">漫画登録</h2>
 
-        <input
-          className="border p-2 w-full mb-3"
-          placeholder="タイトル"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-        />
+      <input
+        value={title}
+        onChange={(e) => setTitle(e.target.value)}
+        placeholder="タイトル"
+        className="w-full border p-2"
+        required
+      />
 
-        <input
-          className="border p-2 w-full mb-3"
-          placeholder="話数（半角）"
-          value={chapters}
-          onChange={(e) => setChapters(e.target.value.replace(/[^0-9]/g, ""))}
-        />
+      <input
+        type="number"
+        value={chapters}
+        onChange={(e) => setChapters(e.target.value)}
+        placeholder="話数"
+        className="w-full border p-2"
+        required
+      />
 
-        <button
-          onClick={handleSubmit}
-          className="bg-sky-400 text-white w-full py-2 rounded"
-        >
-          登録する
-        </button>
-      </div>
-    </div>
+      <button className="w-full bg-blue-500 text-white p-2 rounded">
+        登録
+      </button>
+    </form>
   );
 }
