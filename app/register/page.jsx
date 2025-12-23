@@ -1,59 +1,71 @@
 "use client";
+
 import { useState } from "react";
 import { supabaseBrowser } from "@/utils/supabase/client";
 import { useRouter } from "next/navigation";
-import Header from "@/components/Header";
 
 export default function RegisterPage() {
   const supabase = supabaseBrowser();
   const router = useRouter();
+
   const [title, setTitle] = useState("");
   const [chapters, setChapters] = useState("");
+  const [saving, setSaving] = useState(false);
 
-  const submit = async () => {
-    const { data: auth } = await supabase.auth.getSession();
-    if (!auth.session) return;
+  const save = async () => {
+    if (!title || !chapters) return;
+
+    setSaving(true);
+
+    const { data: auth } = await supabase.auth.getUser();
+    if (!auth.user) return;
 
     await supabase.from("mangas").insert({
-      user_id: auth.session.user.id,
+      user_id: auth.user.id,
       title,
       chapters: Number(chapters),
+      favorite: false,
     });
 
-    // カウント更新
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("total_registered,total_chapters")
-      .eq("id", auth.session.user.id)
-      .single();
+    // プロフィール集計更新
+    await supabase.rpc("update_profile_totals", {
+      uid: auth.user.id,
+    });
 
-    await supabase.from("profiles").update({
-      total_registered: (profile.total_registered || 0) + 1,
-      total_chapters: (profile.total_chapters || 0) + Number(chapters),
-    }).eq("id", auth.session.user.id);
-
+    setSaving(false);
     router.push("/");
   };
 
   return (
-    <>
-      <Header />
-      <div className="p-6 max-w-md mx-auto">
+    <main className="min-h-screen flex justify-center pt-24">
+      <div className="w-full max-w-lg bg-white p-8 rounded-xl shadow space-y-6">
+        <h1 className="text-2xl font-bold text-center">
+          📚 漫画登録
+        </h1>
+
         <input
+          className="w-full border p-3 rounded"
           placeholder="タイトル"
-          className="border p-2 w-full mb-2"
+          value={title}
           onChange={(e) => setTitle(e.target.value)}
         />
+
         <input
-          placeholder="話数"
           type="number"
-          className="border p-2 w-full mb-4"
+          className="w-full border p-3 rounded"
+          placeholder="話数"
+          value={chapters}
           onChange={(e) => setChapters(e.target.value)}
         />
-        <button onClick={submit} className="bg-blue-500 text-white px-4 py-2 rounded">
-          登録
+
+        <button
+          onClick={save}
+          disabled={saving}
+          className="w-full bg-sky-500 text-white py-3 rounded-full font-bold btn-ani"
+        >
+          {saving ? "登録中…" : "登録する"}
         </button>
       </div>
-    </>
+    </main>
   );
 }
