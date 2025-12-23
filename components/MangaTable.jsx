@@ -10,7 +10,6 @@ export default function MangaTable({ mangas, reload }) {
       .from("mangas")
       .update({ favorite: !m.favorite })
       .eq("id", m.id);
-
     reload();
   };
 
@@ -21,7 +20,7 @@ export default function MangaTable({ mangas, reload }) {
 
   return (
     <table className="w-full bg-white rounded shadow">
-      <thead className="bg-teal-100">
+      <thead className="bg-emerald-100">
         <tr>
           <th>タイトル</th>
           <th>話数</th>
@@ -31,12 +30,12 @@ export default function MangaTable({ mangas, reload }) {
       </thead>
       <tbody>
         {mangas.map((m) => (
-          <tr key={m.id} className="text-center">
+          <tr key={m.id} className="text-center border-t">
             <td>{m.title}</td>
             <td>{m.chapters}</td>
             <td
+              className="cursor-pointer text-xl"
               onClick={() => toggleFav(m)}
-              className="cursor-pointer"
             >
               {m.favorite ? "★" : "☆"}
             </td>

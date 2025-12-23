@@ -1,4 +1,5 @@
 "use client";
+
 import { useEffect, useState } from "react";
 import { supabaseBrowser } from "@/utils/supabase/client";
 
@@ -26,36 +27,40 @@ export default function TitlesManager() {
 
   useEffect(() => {
     const load = async () => {
-      const { data: auth } = await supabase.auth.getSession();
-      if (!auth.session) return;
+      const { data } = await supabase.auth.getSession();
+      if (!data.session) return;
 
-      const { data } = await supabase
+      const { data: p } = await supabase
         .from("profiles")
         .select("*")
-        .eq("id", auth.session.user.id)
+        .eq("id", data.session.user.id)
         .single();
 
-      setProfile(data);
-
-      const ch = data.total_chapters || 0;
-      const rg = data.total_registered || 0;
-
-      const list = TITLE_DEFINITIONS.filter(t => {
-        if (t.type === "chapters") return ch >= t.threshold;
-        if (t.type === "registered") return rg >= t.threshold;
-        if (t.type === "both")
-          return ch >= t.threshold.chapters && rg >= t.threshold.registered;
-      }).map(t => t.label);
-
-      setEarned(list);
+      setProfile(p);
+      evaluate(p);
     };
     load();
   }, []);
 
+  const evaluate = (p) => {
+    const ch = p.total_chapters || 0;
+    const rg = p.total_registered || 0;
+
+    const list = TITLE_DEFINITIONS.filter((t) => {
+      if (t.type === "chapters") return ch >= t.threshold;
+      if (t.type === "registered") return rg >= t.threshold;
+      if (t.type === "both")
+        return ch >= t.threshold.chapters && rg >= t.threshold.registered;
+    }).map((t) => t.label);
+
+    setEarned(list);
+  };
+
   const apply = async (label) => {
-    await supabase.from("profiles").update({
-      current_title: label,
-    }).eq("id", profile.id);
+    await supabase
+      .from("profiles")
+      .update({ current_title: label })
+      .eq("id", profile.id);
 
     setProfile({ ...profile, current_title: label });
   };
@@ -63,21 +68,27 @@ export default function TitlesManager() {
   if (!profile) return null;
 
   return (
-    <div className="p-6 bg-white rounded-xl shadow max-w-xl mx-auto">
-      <h2 className="font-bold mb-4">称号</h2>
+    <div className="bg-white rounded-xl p-6 shadow max-w-xl mx-auto">
+      <h2 className="font-bold text-lg mb-4">称号</h2>
+
       <div className="grid gap-2">
-        {TITLE_DEFINITIONS.map(t => (
-          <button
-            key={t.label}
-            disabled={!earned.includes(t.label)}
-            onClick={() => apply(t.label)}
-            className={`p-3 border rounded ${
-              profile.current_title === t.label ? "border-blue-500" : ""
-            } ${!earned.includes(t.label) && "opacity-40"}`}
-          >
-            {t.label}
-          </button>
-        ))}
+        {TITLE_DEFINITIONS.map((t) => {
+          const ok = earned.includes(t.label);
+          const active = profile.current_title === t.label;
+
+          return (
+            <button
+              key={t.label}
+              disabled={!ok}
+              onClick={() => apply(t.label)}
+              className={`p-3 rounded border text-left
+                ${active ? "border-indigo-500 bg-indigo-50" : ""}
+                ${!ok ? "opacity-40 cursor-not-allowed" : ""}`}
+            >
+              {t.label}
+            </button>
+          );
+        })}
       </div>
     </div>
   );
