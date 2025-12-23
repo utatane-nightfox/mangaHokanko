@@ -1,69 +1,28 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import { supabaseBrowser } from "@/utils/supabase/client";
-import { useState } from "react";
+import { usePathname } from "next/navigation";
+import UserIcon from "./UserIcon";
 
 export default function Header() {
   const path = usePathname();
-  const router = useRouter();
-  const supabase = supabaseBrowser();
-  const [open, setOpen] = useState(false);
 
-  const tabs = [
-    { href: "/", label: "ホーム" },
-    { href: "/register", label: "登録" },
-    { href: "/favorites", label: "お気に入り" },
-  ];
+  const tabClass = (href) =>
+    `px-6 py-3 rounded-full text-lg font-semibold transition
+     ${path === href ? "bg-white text-blue-600 shadow" : "bg-blue-100 text-blue-800 hover:bg-blue-200"}`;
 
   return (
-    <header className="fixed top-0 w-full bg-sky-300 z-50">
-      <div className="flex items-center justify-between px-6 py-3 max-w-5xl mx-auto">
-        {/* タブ */}
-        <nav className="flex gap-4 flex-1 justify-center">
-          {tabs.map(t => (
-            <Link
-              key={t.href}
-              href={t.href}
-              className={`px-6 py-2 rounded-full text-lg font-semibold transition
-                ${path === t.href ? "bg-white shadow" : "bg-sky-200 hover:bg-white"}
-              `}
-            >
-              {t.label}
-            </Link>
-          ))}
+    <header className="fixed top-0 left-0 w-full z-50 bg-sky-300">
+      <div className="max-w-5xl mx-auto flex items-center justify-between px-6 py-4">
+        {/* ナビ */}
+        <nav className="flex gap-4">
+          <Link href="/" className={tabClass("/")}>ホーム</Link>
+          <Link href="/register" className={tabClass("/register")}>登録</Link>
+          <Link href="/favorites" className={tabClass("/favorites")}>お気に入り</Link>
         </nav>
 
-        {/* ユーザーアイコン（これ1個だけ） */}
-        <div className="relative">
-          <button onClick={() => setOpen(!open)}>
-            <img
-              src="/avatar.png"
-              className="w-10 h-10 rounded-full border"
-            />
-          </button>
-
-          {open && (
-            <div className="absolute right-0 mt-2 w-40 bg-white rounded shadow">
-              <button
-                onClick={() => router.push("/profile")}
-                className="block w-full px-4 py-2 hover:bg-gray-100 text-left"
-              >
-                プロフィール
-              </button>
-              <button
-                onClick={async () => {
-                  await supabase.auth.signOut();
-                  router.push("/login");
-                }}
-                className="block w-full px-4 py-2 hover:bg-gray-100 text-left"
-              >
-                ログアウト
-              </button>
-            </div>
-          )}
-        </div>
+        {/* ユーザーアイコン */}
+        <UserIcon />
       </div>
     </header>
   );

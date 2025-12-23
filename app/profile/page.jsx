@@ -5,15 +5,20 @@ import { supabaseBrowser } from "@/utils/supabase/client";
 
 export default function ProfilePage() {
   const supabase = supabaseBrowser();
+
   const [user, setUser] = useState(null);
   const [profile, setProfile] = useState(null);
   const [file, setFile] = useState(null);
   const [saving, setSaving] = useState(false);
 
+  /* =========================
+     初期ロード
+  ========================= */
   useEffect(() => {
     const load = async () => {
       const { data } = await supabase.auth.getUser();
-      if (!data.user) return;
+      if (!data?.user) return;
+
       setUser(data.user);
 
       const { data: p } = await supabase
@@ -24,38 +29,49 @@ export default function ProfilePage() {
 
       setProfile(p);
     };
+
     load();
   }, []);
 
+  /* =========================
+     アバター保存
+  ========================= */
   const saveAvatar = async () => {
     if (!file || !user) return;
 
-    setSaving(true);
+    try {
+      setSaving(true);
 
-    /* =========================
-       ① storage に上書き
-    ========================= */
-    await supabase.storage
-      .from("avatars")
-      .upload(`${user.id}/avatar.png`, file, {
-        upsert: true,
-        contentType: file.type,
-      });
+      const path = `${user.id}/avatar.png`;
 
-    const { data } = supabase.storage
-      .from("avatars")
-      .getPublicUrl(`${user.id}/avatar.png`);
+      // ① storage に上書き
+      await supabase.storage
+        .from("avatars")
+        .upload(path, file, {
+          upsert: true,
+          contentType: file.type,
+        });
 
-    /* =========================
-       ② profiles にURL保存
-    ========================= */
-    await supabase
-      .from("profiles")
-      .update({ avatar_url: data.publicUrl })
-      .eq("id", user.id);
+      // ② 公開URL取得
+      const { data } = supabase.storage
+        .from("avatars")
+        .getPublicUrl(path);
 
-    setProfile({ ...profile, avatar_url: data.publicUrl });
-    setSaving(false);
+      // ③ profiles に保存
+      await supabase
+        .from("profiles")
+        .update({ avatar_url: data.publicUrl })
+        .eq("id", user.id);
+
+      // ④ 画面即反映
+      setProfile((prev) => ({
+        ...prev,
+        avatar_url: data.publicUrl,
+      }));
+
+    } finally {
+      setSaving(false);
+    }
   };
 
   if (!profile) return null;
@@ -63,24 +79,30 @@ export default function ProfilePage() {
   return (
     <main className="min-h-screen flex justify-center pt-24">
       <div className="w-full max-w-xl bg-white p-8 rounded-xl shadow">
-        <h1 className="text-xl font-bold mb-6">プロフィール</h1>
+        <h1 className="text-2xl font-bold mb-6 text-center">
+          プロフィール
+        </h1>
 
+        {/* アバター */}
         <img
           src={profile.avatar_url || "/avatar.png"}
-          className="w-32 h-32 rounded-full mx-auto mb-4"
+          alt="avatar"
+          className="w-32 h-32 rounded-full mx-auto mb-6 border"
         />
 
+        {/* ファイル選択 */}
         <input
           type="file"
           accept="image/*"
-          onChange={(e) => setFile(e.target.files[0])}
-          className="mb-4"
+          onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+          className="mb-4 w-full"
         />
 
+        {/* 保存ボタン */}
         <button
           onClick={saveAvatar}
-          disabled={saving}
-          className="w-full bg-green-500 text-white py-2 rounded"
+          disabled={saving || !file}
+          className="w-full bg-green-500 text-white py-2 rounded hover:bg-green-600 disabled:opacity-50"
         >
           {saving ? "保存中…" : "保存"}
         </button>
