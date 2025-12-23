@@ -1,69 +1,83 @@
 "use client";
-
 import { useEffect, useState } from "react";
 import { supabaseBrowser } from "@/utils/supabase/client";
-
-const TITLE_DEFINITIONS = [
-  { label: "見習い読書家", chapters: 100 },
-  { label: "一般読書家", chapters: 1000 },
-  { label: "中堅読書家", chapters: 5000 },
-  { label: "プロ読書家", chapters: 10000 },
-  { label: "漫画王", chapters: 100000, registered: 1000 },
-];
+import { TITLE_DEFINITIONS } from "./definitions";
 
 export default function TitlesManager() {
   const supabase = supabaseBrowser();
   const [profile, setProfile] = useState(null);
+  const [newTitle, setNewTitle] = useState(null);
 
   useEffect(() => {
     const load = async () => {
-      const { data } = await supabase.auth.getSession();
-      if (!data.session) return;
+      const { data } = await supabase.auth.getUser();
+      if (!data.user) return;
 
       const { data: p } = await supabase
         .from("profiles")
         .select("*")
-        .eq("id", data.session.user.id)
+        .eq("id", data.user.id)
         .single();
 
       setProfile(p);
+
+      TITLE_DEFINITIONS.forEach(async t => {
+        if (
+          t.condition(p) &&
+          !p.title_unlocked?.includes(t.label)
+        ) {
+          const updated = [...(p.title_unlocked || []), t.label];
+          await supabase
+            .from("profiles")
+            .update({ title_unlocked: updated })
+            .eq("id", p.id);
+
+          setNewTitle(t.label);
+        }
+      });
     };
     load();
   }, []);
 
   if (!profile) return null;
 
-  const earned = TITLE_DEFINITIONS.filter(t => {
-    if (t.chapters && profile.total_chapters < t.chapters) return false;
-    if (t.registered && profile.total_registered < t.registered) return false;
-    return true;
-  });
-
-  const apply = async (label) => {
-    await supabase
-      .from("profiles")
-      .update({ current_title: label })
-      .eq("id", profile.id);
-
-    setProfile({ ...profile, current_title: label });
-  };
-
   return (
-    <div className="bg-white p-4 rounded shadow">
-      <h3 className="font-bold mb-3">称号</h3>
-      <div className="grid gap-2">
-        {earned.map(t => (
-          <button
-            key={t.label}
-            onClick={() => apply(t.label)}
-            className={`p-3 rounded border
-              ${profile.current_title === t.label ? "border-blue-500" : ""}
-            `}
-          >
-            {t.label}
-          </button>
-        ))}
+    <div className="p-6 bg-white rounded-xl shadow">
+      <h2 className="text-lg font-bold mb-4">称号</h2>
+
+      <div className="grid grid-cols-2 gap-3">
+        {TITLE_DEFINITIONS.map(t => {
+          const owned = profile.title_unlocked?.includes(t.label);
+          return (
+            <button
+              key={t.label}
+              disabled={!owned}
+              onClick={() =>
+                supabase
+                  .from("profiles")
+                  .update({ current_title: t.label })
+                  .eq("id", profile.id)
+              }
+              className={`p-3 rounded border ${
+                owned ? "bg-white" : "bg-gray-200 opacity-40"
+              }`}
+              title="条件を満たすと解放"
+            >
+              {t.label}
+            </button>
+          );
+        })}
       </div>
+
+      {newTitle && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center text-white text-2xl z-50">
+          <div className="text-center">
+            🎉🎉🎉<br />
+            新しい称号を取得しました！<br />
+            {newTitle}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

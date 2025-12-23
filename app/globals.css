@@ -3,43 +3,199 @@
 @tailwind components;
 @tailwind utilities;
 
-/* アプリ共通の微調整 */
-html, body, #__next {
+/* =========================
+   基本設定
+========================= */
+html, body {
   height: 100%;
 }
 
 body {
-  font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", "Noto Sans JP", "Hiragino Kaku Gothic ProN", "Meiryo", sans-serif;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system,
+    "Segoe UI", Roboto, "Helvetica Neue", "Noto Sans JP",
+    "Hiragino Kaku Gothic ProN", "Meiryo", sans-serif;
 }
 
-/* アニメ風のボタン光るエフェクト */
+/* =========================
+   共通UI微調整
+========================= */
 .btn-ani {
   transition: transform .18s ease, box-shadow .18s ease;
 }
 .btn-ani:hover {
-  transform: translateY(-3px) scale(1.02);
-  box-shadow: 0 10px 30px rgba(99,102,241,0.12);
+  transform: translateY(-3px) scale(1.03);
+  box-shadow: 0 12px 30px rgba(99,102,241,0.2);
 }
 
-/* 丸ボタンサイズ */
-.icon-btn {
-  width: 56px;
-  height: 56px;
-  display: inline-flex;
+/* =========================
+   アイコン共通構造
+========================= */
+.avatar-wrapper {
+  position: relative;
+  width: 64px;
+  height: 64px;
+}
+
+.avatar-img {
+  width: 100%;
+  height: 100%;
+  border-radius: 9999px;
+  object-fit: cover;
+  z-index: 2;
+  position: relative;
+}
+
+/* =========================
+   アイコンフレーム共通
+========================= */
+.avatar-frame {
+  position: absolute;
+  inset: -4px;
+  border-radius: 9999px;
+  z-index: 1;
+  pointer-events: none;
+}
+
+/* =========================
+   シンプルカラーフレーム（6種）
+========================= */
+.frame-red    { border: 4px solid #ef4444; }
+.frame-pink   { border: 4px solid #ec4899; }
+.frame-purple { border: 4px solid #8b5cf6; }
+.frame-yellow { border: 4px solid #eab308; }
+.frame-green  { border: 4px solid #22c55e; }
+.frame-blue   { border: 4px solid #3b82f6; }
+
+/* =========================
+   アニメーションフレーム（10種）
+========================= */
+
+/* 1 光る */
+.frame-glow {
+  border: 4px solid #a5b4fc;
+  animation: glow 1.5s ease-in-out infinite alternate;
+}
+
+/* 2 ゆっくり光る */
+.frame-glow-slow {
+  border: 4px solid #c7d2fe;
+  animation: glow 3s ease-in-out infinite alternate;
+}
+
+/* 3 高速光 */
+.frame-glow-fast {
+  border: 4px solid #818cf8;
+  animation: glow 0.7s ease-in-out infinite alternate;
+}
+
+/* 4 回転 */
+.frame-spin {
+  border: 4px dashed #60a5fa;
+  animation: spin-slow 6s linear infinite;
+}
+
+/* 5 ゆっくり回転 */
+.frame-spin-slow {
+  border: 4px dashed #93c5fd;
+  animation: spin-slow 12s linear infinite;
+}
+
+/* 6 点滅 */
+.frame-blink {
+  border: 4px solid #f472b6;
+  animation: flicker 0.8s infinite;
+}
+
+/* 7 ゆっくり点滅 */
+.frame-blink-slow {
+  border: 4px solid #fb7185;
+  animation: flicker 2s infinite;
+}
+
+/* 8 雷っぽい */
+.frame-flicker {
+  border: 4px solid #fde047;
+  animation: flicker 0.4s infinite alternate;
+}
+
+/* 9 炎風 */
+.frame-fire {
+  border: 4px solid #f97316;
+  animation: glow 1s infinite alternate, flicker 0.6s infinite;
+}
+
+/* 10 神々しい */
+.frame-divine {
+  border: 4px solid #facc15;
+  animation: glow 0.8s infinite alternate, spin-slow 8s linear infinite;
+}
+
+/* =========================
+   称号UI
+========================= */
+.title-locked {
+  opacity: 0.35;
+  filter: grayscale(100%);
+  cursor: not-allowed;
+}
+
+.title-unlocked {
+  opacity: 1;
+  filter: none;
+}
+
+/* ホバーで条件表示 */
+.title-item {
+  position: relative;
+}
+
+.title-item:hover::after {
+  content: attr(data-condition);
+  position: absolute;
+  bottom: -36px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0,0,0,0.8);
+  color: white;
+  font-size: 12px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  white-space: nowrap;
+  z-index: 50;
+}
+
+/* =========================
+   称号取得演出
+========================= */
+.title-earned-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(255,255,255,0.85);
+  z-index: 9999;
+  display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 9999px;
-  font-weight: 600;
+  font-size: 2rem;
+  font-weight: bold;
+  animation: fadeOut 2.5s forwards;
 }
 
-/* テーブルのカード感 */
-.table-card th, .table-card td {
-  vertical-align: middle;
+@keyframes fadeOut {
+  0% { opacity: 1; }
+  80% { opacity: 1; }
+  100% { opacity: 0; }
 }
 
+/* =========================
+   アニメーション定義
+========================= */
 @keyframes glow {
-  0%, 100% { box-shadow: 0 0 5px #fff, 0 0 20px currentColor; }
-  50% { box-shadow: 0 0 15px #fff, 0 0 30px currentColor; }
+  0%, 100% {
+    box-shadow: 0 0 6px #fff, 0 0 18px currentColor;
+  }
+  50% {
+    box-shadow: 0 0 14px #fff, 0 0 32px currentColor;
+  }
 }
 
 @keyframes flicker {
@@ -51,13 +207,3 @@ body {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
 }
-
-.animate-glow { animation: glow 1.5s ease-in-out infinite alternate; }
-.animate-glow-slow { animation: glow 3s ease-in-out infinite alternate; }
-.animate-flicker { animation: flicker 1s infinite; }
-.animate-flicker-slow { animation: flicker 2s infinite; }
-.animate-spin-slow { animation: spin-slow 5s linear infinite; }
-.animate-blink { animation: flicker 0.5s infinite alternate; }
-.animate-blink-slow { animation: flicker 1.5s infinite alternate; }
-.animate-glow-fast { animation: glow 0.7s ease-in-out infinite alternate; }
-/* 好みに合わせて他アニメも追加可 */
