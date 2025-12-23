@@ -1,4 +1,5 @@
 "use client";
+
 import { useEffect, useState } from "react";
 import { supabaseBrowser } from "@/utils/supabase/client";
 import MangaTable from "@/components/MangaTable";
@@ -7,47 +8,54 @@ export default function HomePage() {
   const supabase = supabaseBrowser();
   const [profile, setProfile] = useState(null);
   const [mangas, setMangas] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const load = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      const { data: auth } = await supabase.auth.getUser();
+      if (!auth.user) {
+        setLoading(false);
+        return;
+      }
 
       const { data: p } = await supabase
         .from("profiles")
         .select("*")
-        .eq("id", user.id)
+        .eq("id", auth.user.id)
         .single();
-      setProfile(p);
 
       const { data: m } = await supabase
         .from("mangas")
         .select("*")
-        .eq("user_id", user.id)
+        .eq("user_id", auth.user.id)
         .order("created_at", { ascending: false });
+
+      setProfile(p);
       setMangas(m || []);
+      setLoading(false);
     };
+
     load();
   }, []);
 
-  if (!profile) return null;
+  if (loading) return <div className="p-6">読み込み中...</div>;
 
   return (
-    <main className="p-10 space-y-8">
-      {/* 総数表示 */}
-      <div className="flex gap-6">
-        <div className="bg-white rounded-xl p-6 shadow">
-          総話数<br />
-          <b className="text-2xl">{profile.total_chapters}</b>
+    <div className="p-6 space-y-6">
+      {profile && (
+        <div className="flex gap-4">
+          <div className="bg-white rounded-xl p-4 shadow">
+            総話数<br />
+            <b className="text-2xl">{profile.total_chapters}</b>
+          </div>
+          <div className="bg-white rounded-xl p-4 shadow">
+            登録作品数<br />
+            <b className="text-2xl">{profile.total_registered}</b>
+          </div>
         </div>
-        <div className="bg-white rounded-xl p-6 shadow">
-          登録作品数<br />
-          <b className="text-2xl">{profile.total_registered}</b>
-        </div>
-      </div>
+      )}
 
-      {/* 一覧 */}
-      <MangaTable mangas={mangas} />
-    </main>
+      <MangaTable mangas={mangas} reload={() => location.reload()} />
+    </div>
   );
 }
