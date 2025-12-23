@@ -2,47 +2,57 @@
 
 import { useEffect, useState } from "react";
 import { supabaseBrowser } from "@/utils/supabase/client";
-import { useRouter } from "next/navigation";
+import Header from "@/components/Header";
+import MangaTable from "@/components/MangaTable";
 import Link from "next/link";
-import UserHeader from "@/components/UserHeader";
 
 export default function HomePage() {
   const supabase = supabaseBrowser();
-  const router = useRouter();
-
-  const [session, setSession] = useState(undefined); // undefined = 確認中
+  const [session, setSession] = useState(null);
+  const [mangas, setMangas] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
-      if (!data.session) {
-        // 🔥 未ログインなら強制ログイン画面へ
-        router.replace("/login");
-        return;
-      }
-
       setSession(data.session);
+      setLoading(false);
     });
-  }, [router, supabase]);
+  }, []);
 
-  // 確認中
-  if (session === undefined) {
-    return <div className="p-6">ログイン確認中…</div>;
-  }
+  const fetchMangas = async (userId) => {
+    const { data } = await supabase
+      .from("mangas") // ← 絶対に mangas
+      .select("*")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false });
 
-  // ここに来る時点でログイン確定
+    setMangas(data ?? []);
+  };
+
+  useEffect(() => {
+    if (!session) return;
+    fetchMangas(session.user.id);
+  }, [session]);
+
+  if (loading) return <div className="p-6">確認中…</div>;
+  if (!session) return <div className="p-6">ログインしてください</div>;
+
   return (
-    <main className="min-h-screen bg-gradient-to-br from-sky-100 to-green-100 p-6">
-      <header className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-sky-600">📚 Manga管理</h1>
-        <UserHeader user={session.user} />
-      </header>
+    <>
+      <Header />
 
-      <Link
-        href="/register"
-        className="inline-block mb-4 px-4 py-2 rounded-full bg-sky-400 text-white shadow hover:bg-sky-500"
-      >
-        ＋ 登録
-      </Link>
-    </main>
+      <main className="p-6">
+        <h1 className="text-2xl font-bold mb-4">📚 Manga管理</h1>
+
+        <Link
+          href="/register"
+          className="inline-block mb-4 px-4 py-2 rounded bg-sky-400 text-white"
+        >
+          ＋ 登録
+        </Link>
+
+        <MangaTable mangas={mangas} reload={() => fetchMangas(session.user.id)} />
+      </main>
+    </>
   );
 }
