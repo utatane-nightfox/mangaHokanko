@@ -1,7 +1,6 @@
 "use client";
-
-import Link from "next/link";
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { supabaseBrowser } from "@/utils/supabase/client";
 
@@ -13,17 +12,19 @@ export default function Header() {
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
-    supabase.auth.getUser().then(async ({ data }) => {
+    const load = async () => {
+      const { data } = await supabase.auth.getUser();
       if (!data.user) return;
 
       const { data: p } = await supabase
         .from("profiles")
-        .select("avatar_url, current_title, icon_frame")
+        .select("*")
         .eq("id", data.user.id)
         .single();
 
       setProfile(p);
-    });
+    };
+    load();
   }, []);
 
   const logout = async () => {
@@ -32,67 +33,53 @@ export default function Header() {
   };
 
   return (
-    <header className="fixed top-0 left-0 w-full z-50 bg-sky-400 shadow">
-      <div className="max-w-5xl mx-auto flex items-center justify-between px-6 py-3">
-        
-        {/* 上部タブ */}
-        <nav className="flex gap-4 flex-1 justify-center">
-          {[
-            { href: "/", label: "ホーム" },
-            { href: "/register", label: "登録" },
-            { href: "/favorites", label: "お気に入り" },
-          ].map((t) => (
-            <Link
-              key={t.href}
-              href={t.href}
-              className="px-6 py-2 bg-white rounded-full text-lg font-bold shadow hover:bg-sky-100 transition"
-            >
-              {t.label}
-            </Link>
-          ))}
-        </nav>
+    <header className="bg-sky-400 p-4 flex justify-between items-center">
+      <nav className="flex gap-6 mx-auto">
+        {[
+          { href: "/", label: "ホーム" },
+          { href: "/register", label: "登録" },
+          { href: "/favorites", label: "お気に入り" },
+        ].map((n) => (
+          <Link
+            key={n.href}
+            href={n.href}
+            className="px-6 py-2 bg-white rounded-full font-bold shadow"
+          >
+            {n.label}
+          </Link>
+        ))}
+      </nav>
 
-        {/* プロフィールアイコン */}
-        {profile && (
-          <div className="relative">
-            <button
-              onClick={() => setOpen(!open)}
-              className={`w-12 h-12 rounded-full border-2 flex items-center justify-center ${profile.icon_frame}`}
-            >
-              <img
-                src={profile.avatar_url || "/avatar.png"}
-                className="w-full h-full rounded-full object-cover"
-              />
-            </button>
-
-            {open && (
-              <div className="absolute right-0 mt-2 w-40 bg-white rounded-xl shadow overflow-hidden text-sm">
-                <button
-                  onClick={() => {
-                    setOpen(false);
-                    router.push("/profile");
-                  }}
-                  className="block w-full text-left px-4 py-2 hover:bg-sky-100"
-                >
-                  プロフィール
-                </button>
-                <button
-                  onClick={logout}
-                  className="block w-full text-left px-4 py-2 text-red-600 hover:bg-red-100"
-                >
-                  ログアウト
-                </button>
-              </div>
-            )}
-
-            {profile.current_title && (
-              <div className="text-xs text-center mt-1 text-white">
-                {profile.current_title}
-              </div>
-            )}
+      {profile && (
+        <div className="relative mr-4">
+          <div
+            onClick={() => setOpen(!open)}
+            className={`w-10 h-10 rounded-full cursor-pointer ${profile.icon_frame}`}
+          >
+            <img
+              src={profile.avatar_url || "/avatar.png"}
+              className="w-full h-full rounded-full object-cover"
+            />
           </div>
-        )}
-      </div>
+
+          {open && (
+            <div className="absolute right-0 mt-2 w-40 bg-white rounded-xl shadow">
+              <button
+                onClick={() => router.push("/profile")}
+                className="block w-full px-4 py-2 hover:bg-gray-100 text-left"
+              >
+                プロフィール
+              </button>
+              <button
+                onClick={logout}
+                className="block w-full px-4 py-2 text-red-500 hover:bg-red-50 text-left"
+              >
+                ログアウト
+              </button>
+            </div>
+          )}
+        </div>
+      )}
     </header>
   );
 }

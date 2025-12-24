@@ -1,102 +1,116 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { supabaseBrowser } from "@/utils/supabase/client";
 
 export default function LoginPage() {
+  const supabase = supabaseBrowser();
+  const router = useRouter();
+
   const [email, setEmail] = useState("");
-  const [sent, setSent] = useState(false);
+  const [otp, setOtp] = useState("");
+  const [step, setStep] = useState("email"); // email | otp
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
 
-  const supabase = supabaseBrowser();
-
-  // ① メール送信
-  const handleSend = async (e) => {
-    e.preventDefault();
+  // OTP送信
+  const sendOtp = async () => {
+    if (!email) return;
     setLoading(true);
     setMessage("");
 
-    const { error } = await supabase.auth.signInWithOtp({ email });
-
-    if (error) {
-      setMessage("メール送信に失敗しました");
-    } else {
-      setSent(true);
-      setMessage("6桁コードをメールに送信しました");
-    }
+    const { error } = await supabase.auth.signInWithOtp({
+      email,
+      options: {
+        shouldCreateUser: true, // 未登録でもOK
+      },
+    });
 
     setLoading(false);
+
+    if (error) {
+      setMessage(error.message);
+      return;
+    }
+
+    setStep("otp");
+    setMessage("6桁の認証コードをメールで送信しました");
   };
 
-  // ② コード入力・認証
-  const handleVerify = async (e) => {
-    e.preventDefault();
+  // OTP確認
+  const verifyOtp = async () => {
+    if (!otp) return;
     setLoading(true);
+    setMessage("");
 
-    const token = e.target.token.value;
-
-    const { data, error } = await supabase.auth.verifyOtp({
+    const { error } = await supabase.auth.verifyOtp({
       email,
-      token,
+      token: otp,
       type: "email",
     });
 
+    setLoading(false);
+
     if (error) {
-      setMessage("コードが間違っています");
-    } else {
-      window.location.href = "/";
+      setMessage("コードが正しくありません");
+      return;
     }
 
-    setLoading(false);
+    router.push("/");
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center">
-      <div className="bg-white p-8 rounded-xl shadow-md w-full max-w-md">
+    <main className="min-h-screen flex items-center justify-center bg-sky-50">
+      <div className="bg-white p-8 rounded-xl shadow w-full max-w-md space-y-6">
+        <h1 className="text-2xl font-bold text-center">ログイン</h1>
 
-        {!sent ? (
-          <form onSubmit={handleSend} className="space-y-4">
-            <h2 className="text-xl font-bold">メールログイン</h2>
+        {step === "email" && (
+          <>
             <input
               type="email"
               placeholder="メールアドレス"
-              className="border p-2 w-full rounded"
+              className="w-full border p-3 rounded"
+              value={email}
               onChange={(e) => setEmail(e.target.value)}
-              required
             />
             <button
-              type="submit"
-              className="bg-blue-500 text-white w-full py-2 rounded"
+              onClick={sendOtp}
               disabled={loading}
+              className="w-full bg-sky-500 text-white py-3 rounded"
             >
-              {loading ? "送信中..." : "6桁コードを送る"}
+              {loading ? "送信中…" : "認証コードを送信"}
             </button>
-          </form>
-        ) : (
-          <form onSubmit={handleVerify} className="space-y-4">
-            <h2 className="text-xl font-bold">コード入力</h2>
+          </>
+        )}
+
+        {step === "otp" && (
+          <>
             <input
-              name="token"
               type="text"
-              placeholder="6桁コード"
-              className="border p-2 w-full rounded"
-              required
+              inputMode="numeric"
+              maxLength={6}
+              placeholder="6桁の認証コード"
+              className="w-full border p-3 rounded text-center tracking-widest"
+              value={otp}
+              onChange={(e) => setOtp(e.target.value)}
             />
             <button
-              type="submit"
-              className="bg-green-500 text-white w-full py-2 rounded"
+              onClick={verifyOtp}
               disabled={loading}
+              className="w-full bg-green-500 text-white py-3 rounded"
             >
-              {loading ? "認証中..." : "ログイン"}
+              {loading ? "確認中…" : "ログイン"}
             </button>
-          </form>
+          </>
         )}
 
         {message && (
-          <p className="mt-4 text-center text-sm">{message}</p>
+          <div className="text-center text-sm text-gray-600">
+            {message}
+          </div>
         )}
       </div>
-    </div>
+    </main>
   );
 }

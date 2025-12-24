@@ -1,37 +1,35 @@
 // components/definitions.js
 
-export const TITLE_DEFINITIONS = [
-  { label: "見習い読書家", condition: p => p.total_chapters >= 100 },
-  { label: "一般読書家", condition: p => p.total_chapters >= 1000 },
-  { label: "中堅読書家", condition: p => p.total_chapters >= 5000 },
-  { label: "プロ読書家", condition: p => p.total_chapters >= 10000 },
-  { label: "伝導者", condition: p => p.total_chapters >= 100000 },
+export const ICON_FRAMES = [
+  { key: "none", class: "" },
 
-  { label: "放浪研究家", condition: p => p.total_registered >= 10 },
-  { label: "図書館所属研究家", condition: p => p.total_registered >= 100 },
-  { label: "王宮所属研究家", condition: p => p.total_registered >= 500 },
-  { label: "究明者", condition: p => p.total_registered >= 1000 },
+  { key: "red", class: "frame-red" },
+  { key: "pink", class: "frame-pink" },
+  { key: "purple", class: "frame-purple" },
+  { key: "yellow", class: "frame-yellow" },
+  { key: "green", class: "frame-green" },
+  { key: "blue", class: "frame-blue" },
 
-  {
-    label: "漫画王",
-    condition: p =>
-      p.total_chapters >= 100000 && p.total_registered >= 1000,
-  },
+  { key: "glow", class: "frame-glow" },
+  { key: "spin", class: "frame-spin" },
+  { key: "pulse", class: "frame-pulse" },
+  { key: "rainbow", class: "frame-rainbow" },
 ];
 
-export const ICON_FRAMES = [
-  // シンプル
-  "red", "pink", "purple", "yellow", "green", "blue",
-
-  // アニメーション（10）
-  "glow-gold",
-  "glow-rainbow",
-  "pulse-blue",
-  "sparkle",
-  "fire",
-  "ice",
-  "electric",
-  "shadow",
-  "angel",
-  "dark-magic",
+export const TITLE_DEFINITIONS = [
+  {
+    label: "見習い読書家",
+    condition: "総話数が10話以上",
+    check: (p) => p.total_chapters >= 10,
+  },
+  {
+    label: "読書好き",
+    condition: "総話数が50話以上",
+    check: (p) => p.total_chapters >= 50,
+  },
+  {
+    label: "漫画マスター",
+    condition: "総話数が100話以上",
+    check: (p) => p.total_chapters >= 100,
+  },
 ];
