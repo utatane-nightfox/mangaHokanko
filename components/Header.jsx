@@ -3,25 +3,31 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { supabaseBrowser } from "@/utils/supabase/client";
+import { useRouter } from "next/navigation";
 
 export default function Header() {
   const supabase = supabaseBrowser();
+  const router = useRouter();
   const [profile, setProfile] = useState(null);
 
   useEffect(() => {
-    supabase.auth.getUser().then(async ({ data }) => {
-      if (!data.user) return;
-      const { data: p } = await supabase
+    const load = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data } = await supabase
         .from("profiles")
         .select("*")
-        .eq("id", data.user.id)
+        .eq("id", user.id)
         .single();
-      setProfile(p);
-    });
+
+      setProfile(data);
+    };
+    load();
   }, []);
 
   return (
-    <header className="fixed top-0 w-full bg-sky-400 p-4 flex justify-between items-center z-50">
+    <header className="bg-sky-400 p-4 flex justify-between items-center">
       <nav className="flex gap-4">
         <Link href="/" className="px-4 py-2 bg-white rounded-full">一覧</Link>
         <Link href="/register" className="px-4 py-2 bg-white rounded-full">登録</Link>
@@ -29,13 +35,18 @@ export default function Header() {
       </nav>
 
       {profile && (
-        <div className="text-center text-sm">
+        <div
+          onClick={() => router.push("/profile")}
+          className={`cursor-pointer ${profile.icon_frame}`}
+        >
           <img
             src={profile.avatar_url || "/avatar.png"}
-            className="w-10 h-10 rounded-full mx-auto"
+            className="w-10 h-10 rounded-full"
           />
           {profile.current_title && (
-            <div className="text-xs mt-1">{profile.current_title}</div>
+            <div className="text-xs text-center">
+              {profile.current_title}
+            </div>
           )}
         </div>
       )}
