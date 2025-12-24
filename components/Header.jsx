@@ -1,6 +1,7 @@
 "use client";
-import { useEffect, useState } from "react";
+
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabaseBrowser } from "@/utils/supabase/client";
 
@@ -9,7 +10,7 @@ export default function Header() {
   const router = useRouter();
 
   const [profile, setProfile] = useState(null);
-  const [open, setOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -18,7 +19,7 @@ export default function Header() {
 
       const { data: p } = await supabase
         .from("profiles")
-        .select("*")
+        .select("nickname, avatar_url, icon_frame, current_title")
         .eq("id", data.user.id)
         .single();
 
@@ -33,53 +34,60 @@ export default function Header() {
   };
 
   return (
-    <header className="bg-sky-400 p-4 flex justify-between items-center">
-      <nav className="flex gap-6 mx-auto">
-        {[
-          { href: "/", label: "ホーム" },
-          { href: "/register", label: "登録" },
-          { href: "/favorites", label: "お気に入り" },
-        ].map((n) => (
-          <Link
-            key={n.href}
-            href={n.href}
-            className="px-6 py-2 bg-white rounded-full font-bold shadow"
-          >
-            {n.label}
-          </Link>
-        ))}
-      </nav>
+    <header className="fixed top-0 left-0 w-full bg-sky-400 shadow z-50">
+      <div className="max-w-6xl mx-auto px-6 h-20 flex items-center justify-between">
+        {/* ナビ */}
+        <nav className="flex gap-6">
+          {[
+            { href: "/", label: "ホーム" },
+            { href: "/register", label: "登録" },
+            { href: "/favorites", label: "お気に入り" },
+          ].map((n) => (
+            <Link
+              key={n.href}
+              href={n.href}
+              className="px-6 py-2 bg-white rounded-full font-bold shadow"
+            >
+              {n.label}
+            </Link>
+          ))}
+        </nav>
 
-      {profile && (
-        <div className="relative mr-4">
-          <div
-            onClick={() => setOpen(!open)}
-            className={`w-10 h-10 rounded-full cursor-pointer ${profile.icon_frame}`}
-          >
-            <img
-              src={profile.avatar_url || "/avatar.png"}
-              className="w-full h-full rounded-full object-cover"
-            />
-          </div>
-
-          {open && (
-            <div className="absolute right-0 mt-2 w-40 bg-white rounded-xl shadow">
-              <button
-                onClick={() => router.push("/profile")}
-                className="block w-full px-4 py-2 hover:bg-gray-100 text-left"
-              >
-                プロフィール
-              </button>
-              <button
-                onClick={logout}
-                className="block w-full px-4 py-2 text-red-500 hover:bg-red-50 text-left"
-              >
-                ログアウト
-              </button>
+        {/* プロフィール */}
+        {profile && (
+          <div className="relative">
+            <div
+              onClick={() => setMenuOpen(!menuOpen)}
+              className={`w-12 h-12 rounded-full cursor-pointer flex items-center justify-center ${profile.icon_frame}`}
+            >
+              <img
+                src={profile.avatar_url || "/avatar.png"}
+                className="w-full h-full rounded-full object-cover"
+              />
             </div>
-          )}
-        </div>
-      )}
+
+            {menuOpen && (
+              <div className="absolute right-0 mt-2 w-44 bg-white rounded-xl shadow overflow-hidden text-sm">
+                <button
+                  onClick={() => {
+                    setMenuOpen(false);
+                    router.push("/profile");
+                  }}
+                  className="block w-full text-left px-4 py-3 hover:bg-sky-50"
+                >
+                  プロフィール
+                </button>
+                <button
+                  onClick={logout}
+                  className="block w-full text-left px-4 py-3 text-red-600 hover:bg-red-100"
+                >
+                  ログアウト
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
     </header>
   );
 }
