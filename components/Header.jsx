@@ -1,37 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { supabaseBrowser } from "@/utils/supabase/client";
-import { useRouter } from "next/navigation";
-
-export default function Header() {
-  const supabase = supabaseBrowser();
-  const router = useRouter();
-
-  const logout = async () => {
-    await supabase.auth.signOut();
-    router.replace("/login");
-  };
-
-  return (
-    <header className="bg-sky-400 p-4 flex justify-between items-center">
-      <nav className="flex gap-6">
-        <Link href="/">ホーム</Link>
-        <Link href="/register">登録</Link>
-        <Link href="/favorites">お気に入り</Link>
-        <Link href="/profile">プロフィール</Link>
-      </nav>
-
-      <button
-        onClick={logout}
-        className="bg-white px-4 py-2 rounded-full shadow"
-      >
-        ログアウト
-      </button>
-    </header>
-  );"use client";
-
-import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabaseBrowser } from "@/utils/supabase/client";
@@ -44,28 +13,32 @@ export default function Header() {
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
-    supabase.auth.getUser().then(async ({ data }) => {
-      if (!data.user) return;
+    const load = async () => {
+      const { data } = await supabase.auth.getSession();
+      if (!data?.session) return;
 
       const { data: p } = await supabase
         .from("profiles")
         .select("avatar_url, current_title, icon_frame")
-        .eq("id", data.user.id)
+        .eq("id", data.session.user.id)
         .single();
 
       setProfile(p);
-    });
+    };
+    load();
   }, []);
+
+  if (!profile) return null; // ← 未ログイン時は何も出さない
 
   const logout = async () => {
     await supabase.auth.signOut();
-    router.push("/login");
+    router.replace("/login");
   };
 
   return (
     <header className="fixed top-0 left-0 w-full z-50 bg-sky-400 shadow">
       <div className="max-w-5xl mx-auto flex items-center justify-between px-6 py-3">
-        
+
         {/* 上部タブ */}
         <nav className="flex gap-4 flex-1 justify-center">
           {[
@@ -76,56 +49,52 @@ export default function Header() {
             <Link
               key={t.href}
               href={t.href}
-              className="px-6 py-2 bg-white rounded-full text-lg font-bold shadow hover:bg-sky-100 transition"
+              className="px-6 py-2 bg-white rounded-full font-bold shadow hover:bg-sky-100"
             >
               {t.label}
             </Link>
           ))}
         </nav>
 
-        {/* プロフィールアイコン */}
-        {profile && (
-          <div className="relative">
-            <button
-              onClick={() => setOpen(!open)}
-              className={`w-12 h-12 rounded-full border-2 flex items-center justify-center ${profile.icon_frame}`}
-            >
-              <img
-                src={profile.avatar_url || "/avatar.png"}
-                className="w-full h-full rounded-full object-cover"
-              />
-            </button>
+        {/* プロフィール */}
+        <div className="relative">
+          <button
+            onClick={() => setOpen(!open)}
+            className={`w-12 h-12 rounded-full border-2 flex items-center justify-center ${profile.icon_frame}`}
+          >
+            <img
+              src={profile.avatar_url || "/avatar.png"}
+              className="w-full h-full rounded-full object-cover"
+            />
+          </button>
 
-            {open && (
-              <div className="absolute right-0 mt-2 w-40 bg-white rounded-xl shadow overflow-hidden text-sm">
-                <button
-                  onClick={() => {
-                    setOpen(false);
-                    router.push("/profile");
-                  }}
-                  className="block w-full text-left px-4 py-2 hover:bg-sky-100"
-                >
-                  プロフィール
-                </button>
-                <button
-                  onClick={logout}
-                  className="block w-full text-left px-4 py-2 text-red-600 hover:bg-red-100"
-                >
-                  ログアウト
-                </button>
-              </div>
-            )}
+          {open && (
+            <div className="absolute right-0 mt-2 w-40 bg-white rounded-xl shadow text-sm overflow-hidden">
+              <button
+                onClick={() => {
+                  setOpen(false);
+                  router.push("/profile");
+                }}
+                className="block w-full px-4 py-2 hover:bg-sky-100 text-left"
+              >
+                プロフィール
+              </button>
+              <button
+                onClick={logout}
+                className="block w-full px-4 py-2 text-red-600 hover:bg-red-100 text-left"
+              >
+                ログアウト
+              </button>
+            </div>
+          )}
 
-            {profile.current_title && (
-              <div className="text-xs text-center mt-1 text-white">
-                {profile.current_title}
-              </div>
-            )}
-          </div>
-        )}
+          {profile.current_title && (
+            <div className="text-xs text-center mt-1 text-white">
+              {profile.current_title}
+            </div>
+          )}
+        </div>
       </div>
     </header>
   );
-}
-
 }

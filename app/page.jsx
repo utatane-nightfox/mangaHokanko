@@ -10,63 +10,54 @@ export default function HomePage() {
   const router = useRouter();
 
   const [loading, setLoading] = useState(true);
-  const [mangas, setMangas] = useState([]);
   const [profile, setProfile] = useState(null);
+  const [mangas, setMangas] = useState([]);
 
   useEffect(() => {
     const load = async () => {
-      const { data: sessionData } = await supabase.auth.getSession();
-
-      // ❌ 未ログイン → ログイン画面へ
-      if (!sessionData?.session) {
+      const { data } = await supabase.auth.getSession();
+      if (!data?.session) {
         router.replace("/login");
         return;
       }
 
-      const userId = sessionData.session.user.id;
+      const userId = data.session.user.id;
 
-      // プロフィール取得
       const { data: p } = await supabase
         .from("profiles")
         .select("*")
         .eq("id", userId)
         .single();
 
-      setProfile(p);
-
-      // 漫画一覧取得
       const { data: list } = await supabase
         .from("mangas")
         .select("*")
         .eq("user_id", userId)
         .order("created_at", { ascending: false });
 
+      setProfile(p);
       setMangas(list || []);
       setLoading(false);
     };
 
     load();
-  }, [router, supabase]);
+  }, []);
 
-  if (loading) {
-    return <div className="p-10">読み込み中...</div>;
-  }
+  if (loading) return <div className="p-10">読み込み中...</div>;
 
   return (
     <main className="p-10 space-y-6">
-      {/* ステータス */}
       <div className="flex gap-6">
-        <div className="bg-white rounded-xl p-6 shadow">
+        <div className="bg-white p-6 rounded-xl shadow">
           総話数<br />
           <b className="text-2xl">{profile.total_chapters}</b>
         </div>
-        <div className="bg-white rounded-xl p-6 shadow">
+        <div className="bg-white p-6 rounded-xl shadow">
           登録作品数<br />
           <b className="text-2xl">{profile.total_registered}</b>
         </div>
       </div>
 
-      {/* 一覧 */}
       <MangaTable mangas={mangas} reload={() => location.reload()} />
     </main>
   );
