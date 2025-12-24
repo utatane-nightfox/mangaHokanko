@@ -8,27 +8,24 @@ import { supabaseBrowser } from "@/utils/supabase/client";
 export default function Header() {
   const supabase = supabaseBrowser();
   const router = useRouter();
-
   const [profile, setProfile] = useState(null);
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
     const load = async () => {
-      const { data } = await supabase.auth.getSession();
-      if (!data?.session) return;
+      const { data } = await supabase.auth.getUser();
+      if (!data.user) return;
 
       const { data: p } = await supabase
         .from("profiles")
         .select("avatar_url, current_title, icon_frame")
-        .eq("id", data.session.user.id)
+        .eq("id", data.user.id)
         .single();
 
       setProfile(p);
     };
     load();
   }, []);
-
-  if (!profile) return null; // ← 未ログイン時は何も出さない
 
   const logout = async () => {
     await supabase.auth.signOut();
@@ -40,7 +37,7 @@ export default function Header() {
       <div className="max-w-5xl mx-auto flex items-center justify-between px-6 py-3">
 
         {/* 上部タブ */}
-        <nav className="flex gap-4 flex-1 justify-center">
+        <nav className="flex gap-4">
           {[
             { href: "/", label: "ホーム" },
             { href: "/register", label: "登録" },
@@ -57,43 +54,45 @@ export default function Header() {
         </nav>
 
         {/* プロフィール */}
-        <div className="relative">
-          <button
-            onClick={() => setOpen(!open)}
-            className={`w-12 h-12 rounded-full border-2 flex items-center justify-center ${profile.icon_frame}`}
-          >
-            <img
-              src={profile.avatar_url || "/avatar.png"}
-              className="w-full h-full rounded-full object-cover"
-            />
-          </button>
+        {profile && (
+          <div className="relative">
+            <button
+              onClick={() => setOpen(!open)}
+              className={`w-12 h-12 rounded-full border-2 flex items-center justify-center ${profile.icon_frame}`}
+            >
+              <img
+                src={profile.avatar_url || "/avatar.png"}
+                className="w-full h-full rounded-full object-cover"
+              />
+            </button>
 
-          {open && (
-            <div className="absolute right-0 mt-2 w-40 bg-white rounded-xl shadow text-sm overflow-hidden">
-              <button
-                onClick={() => {
-                  setOpen(false);
-                  router.push("/profile");
-                }}
-                className="block w-full px-4 py-2 hover:bg-sky-100 text-left"
-              >
-                プロフィール
-              </button>
-              <button
-                onClick={logout}
-                className="block w-full px-4 py-2 text-red-600 hover:bg-red-100 text-left"
-              >
-                ログアウト
-              </button>
-            </div>
-          )}
+            {open && (
+              <div className="absolute right-0 mt-2 w-40 bg-white rounded-xl shadow text-sm">
+                <button
+                  onClick={() => {
+                    setOpen(false);
+                    router.push("/profile");
+                  }}
+                  className="block w-full text-left px-4 py-2 hover:bg-sky-100"
+                >
+                  プロフィール
+                </button>
+                <button
+                  onClick={logout}
+                  className="block w-full text-left px-4 py-2 text-red-600 hover:bg-red-100"
+                >
+                  ログアウト
+                </button>
+              </div>
+            )}
 
-          {profile.current_title && (
-            <div className="text-xs text-center mt-1 text-white">
-              {profile.current_title}
-            </div>
-          )}
-        </div>
+            {profile.current_title && (
+              <div className="text-xs text-center mt-1 text-white">
+                {profile.current_title}
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </header>
   );

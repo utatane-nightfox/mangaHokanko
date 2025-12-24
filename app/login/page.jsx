@@ -8,28 +8,39 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [sent, setSent] = useState(false);
   const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   const handleLogin = async () => {
+    setLoading(true);
     setError(null);
+
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: {
         emailRedirectTo: `${location.origin}/`,
       },
     });
-    if (error) setError(error.message);
-    else setSent(true);
+
+    if (error) {
+      setError(error.message);
+      setLoading(false);
+      return;
+    }
+
+    setSent(true);
+    setLoading(false);
   };
 
   return (
     <main className="min-h-screen flex items-center justify-center bg-sky-50">
-      <div className="bg-white p-8 rounded-xl shadow w-full max-w-md space-y-4">
-        <h1 className="text-xl font-bold text-center">ログイン</h1>
+      <div className="w-full max-w-md bg-white p-8 rounded-xl shadow space-y-6">
+        <h1 className="text-2xl font-bold text-center">ログイン</h1>
 
         {sent ? (
-          <p className="text-center text-green-600">
-            📩 メールを確認してください
-          </p>
+          <div className="text-center text-green-600">
+            📩 ログイン用リンクを送信しました。<br />
+            メールをご確認ください。
+          </div>
         ) : (
           <>
             <input
@@ -37,14 +48,19 @@ export default function LoginPage() {
               placeholder="メールアドレス"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full border px-4 py-2 rounded"
+              className="w-full border rounded px-4 py-2"
             />
-            {error && <p className="text-red-600 text-sm">{error}</p>}
+
+            {error && (
+              <div className="text-red-600 text-sm">{error}</div>
+            )}
+
             <button
               onClick={handleLogin}
-              className="w-full bg-sky-500 text-white py-2 rounded font-bold"
+              disabled={loading || !email}
+              className="w-full bg-sky-500 text-white py-2 rounded font-bold disabled:opacity-50"
             >
-              ログインリンク送信
+              {loading ? "送信中…" : "ログインリンクを送る"}
             </button>
           </>
         )}
