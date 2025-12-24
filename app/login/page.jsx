@@ -4,67 +4,99 @@ import { useState } from "react";
 import { supabaseBrowser } from "@/utils/supabase/client";
 
 export default function LoginPage() {
-  const supabase = supabaseBrowser();
   const [email, setEmail] = useState("");
   const [sent, setSent] = useState(false);
-  const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState("");
 
-  const handleLogin = async () => {
+  const supabase = supabaseBrowser();
+
+  // ① メール送信
+  const handleSend = async (e) => {
+    e.preventDefault();
     setLoading(true);
-    setError(null);
+    setMessage("");
 
-    const { error } = await supabase.auth.signInWithOtp({
+    const { error } = await supabase.auth.signInWithOtp({ email });
+
+    if (error) {
+      setMessage("メール送信に失敗しました");
+    } else {
+      setSent(true);
+      setMessage("6桁コードをメールに送信しました");
+    }
+
+    setLoading(false);
+  };
+
+  // ② コード入力・認証
+  const handleVerify = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+
+    const token = e.target.token.value;
+
+    const { data, error } = await supabase.auth.verifyOtp({
       email,
-      options: {
-        emailRedirectTo: `${location.origin}/`,
-      },
+      token,
+      type: "email",
     });
 
     if (error) {
-      setError(error.message);
-      setLoading(false);
-      return;
+      setMessage("コードが間違っています");
+    } else {
+      window.location.href = "/";
     }
 
-    setSent(true);
     setLoading(false);
   };
 
   return (
-    <main className="min-h-screen flex items-center justify-center bg-sky-50">
-      <div className="w-full max-w-md bg-white p-8 rounded-xl shadow space-y-6">
-        <h1 className="text-2xl font-bold text-center">ログイン</h1>
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="bg-white p-8 rounded-xl shadow-md w-full max-w-md">
 
-        {sent ? (
-          <div className="text-center text-green-600">
-            📩 ログイン用リンクを送信しました。<br />
-            メールをご確認ください。
-          </div>
-        ) : (
-          <>
+        {!sent ? (
+          <form onSubmit={handleSend} className="space-y-4">
+            <h2 className="text-xl font-bold">メールログイン</h2>
             <input
               type="email"
               placeholder="メールアドレス"
-              value={email}
+              className="border p-2 w-full rounded"
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full border rounded px-4 py-2"
+              required
             />
-
-            {error && (
-              <div className="text-red-600 text-sm">{error}</div>
-            )}
-
             <button
-              onClick={handleLogin}
-              disabled={loading || !email}
-              className="w-full bg-sky-500 text-white py-2 rounded font-bold disabled:opacity-50"
+              type="submit"
+              className="bg-blue-500 text-white w-full py-2 rounded"
+              disabled={loading}
             >
-              {loading ? "送信中…" : "ログインリンクを送る"}
+              {loading ? "送信中..." : "6桁コードを送る"}
             </button>
-          </>
+          </form>
+        ) : (
+          <form onSubmit={handleVerify} className="space-y-4">
+            <h2 className="text-xl font-bold">コード入力</h2>
+            <input
+              name="token"
+              type="text"
+              placeholder="6桁コード"
+              className="border p-2 w-full rounded"
+              required
+            />
+            <button
+              type="submit"
+              className="bg-green-500 text-white w-full py-2 rounded"
+              disabled={loading}
+            >
+              {loading ? "認証中..." : "ログイン"}
+            </button>
+          </form>
+        )}
+
+        {message && (
+          <p className="mt-4 text-center text-sm">{message}</p>
         )}
       </div>
-    </main>
+    </div>
   );
 }
