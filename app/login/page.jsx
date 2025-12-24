@@ -2,25 +2,24 @@
 
 import { useState } from "react";
 import { supabaseBrowser } from "@/utils/supabase/client";
-import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
   const supabase = supabaseBrowser();
-  const router = useRouter();
 
   const [email, setEmail] = useState("");
-  const [otp, setOtp] = useState("");
-  const [step, setStep] = useState("email"); // email | otp
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [sent, setSent] = useState(false);
+  const [error, setError] = useState(null);
 
-  // OTP送信
-  const sendOtp = async () => {
+  const handleLogin = async () => {
     setLoading(true);
-    setError("");
+    setError(null);
 
     const { error } = await supabase.auth.signInWithOtp({
       email,
+      options: {
+        emailRedirectTo: `${location.origin}/`,
+      },
     });
 
     if (error) {
@@ -29,77 +28,46 @@ export default function LoginPage() {
       return;
     }
 
-    setStep("otp");
+    setSent(true);
     setLoading(false);
-  };
-
-  // OTP確認
-  const verifyOtp = async () => {
-    setLoading(true);
-    setError("");
-
-    const { error } = await supabase.auth.verifyOtp({
-      email,
-      token: otp,
-      type: "email",
-    });
-
-    if (error) {
-      setError(error.message);
-      setLoading(false);
-      return;
-    }
-
-    router.push("/");
   };
 
   return (
     <main className="min-h-screen flex items-center justify-center bg-sky-50">
-      <div className="bg-white p-8 rounded-xl shadow w-full max-w-sm space-y-4">
-        <h1 className="text-xl font-bold text-center">ログイン</h1>
+      <div className="w-full max-w-md bg-white p-8 rounded-xl shadow space-y-6">
+        <h1 className="text-2xl font-bold text-center">
+          ログイン
+        </h1>
 
-        {step === "email" && (
+        {sent ? (
+          <div className="text-center text-green-600">
+            📩 ログイン用リンクを送信しました。<br />
+            メールをご確認ください。
+          </div>
+        ) : (
           <>
             <input
               type="email"
               placeholder="メールアドレス"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full border rounded p-2"
+              className="w-full border rounded px-4 py-2"
             />
+
+            {error && (
+              <div className="text-red-600 text-sm">
+                {error}
+              </div>
+            )}
+
             <button
-              onClick={sendOtp}
-              disabled={loading}
-              className="w-full bg-sky-500 text-white py-2 rounded"
+              onClick={handleLogin}
+              disabled={loading || !email}
+              className="w-full bg-sky-500 text-white py-2 rounded font-bold disabled:opacity-50"
             >
-              {loading ? "送信中…" : "6桁コードを送信"}
+              {loading ? "送信中…" : "ログインリンクを送る"}
             </button>
           </>
-        )}
-
-        {step === "otp" && (
-          <>
-            <input
-              type="text"
-              placeholder="6桁コード"
-              value={otp}
-              onChange={(e) => setOtp(e.target.value)}
-              className="w-full border rounded p-2 text-center tracking-widest"
-            />
-            <button
-              onClick={verifyOtp}
-              disabled={loading}
-              className="w-full bg-green-500 text-white py-2 rounded"
-            >
-              {loading ? "確認中…" : "ログイン"}
-            </button>
-          </>
-        )}
-
-        {error && (
-          <div className="text-red-500 text-sm text-center">
-            {error}
-          </div>
         )}
       </div>
     </main>
