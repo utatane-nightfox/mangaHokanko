@@ -18,33 +18,30 @@ export default function LoginPage() {
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: {
-        // 🔴 マジックリンク後は必ず callback に行かせる
         emailRedirectTo: `${location.origin}/callback`,
       },
     });
 
     if (error) {
       setError("メール送信に失敗しました");
-      setLoading(false);
-      return;
+    } else {
+      setSent(true);
     }
-
-    setSent(true);
     setLoading(false);
   };
 
   return (
-    <main className="min-h-screen flex items-center justify-center bg-sky-50">
-      <div className="w-full max-w-md bg-white p-8 rounded-xl shadow space-y-6">
-        <h1 className="text-2xl font-bold text-center">
-          ログイン
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-sky-100 to-green-100">
+      <div className="bg-white/80 backdrop-blur p-10 rounded-3xl shadow-xl w-full max-w-md">
+        <h1 className="text-2xl font-bold text-center text-green-700 mb-6">
+          Manga保管庫 ログイン
         </h1>
 
         {sent ? (
-          <div className="text-center text-green-600">
-            📩 ログイン用リンクを送信しました。<br />
-            メールをご確認ください。
-          </div>
+          <p className="text-center text-green-700">
+            📩 ログイン用リンクを送信しました<br />
+            メールをご確認ください
+          </p>
         ) : (
           <form onSubmit={handleLogin} className="space-y-4">
             <input
@@ -52,26 +49,22 @@ export default function LoginPage() {
               placeholder="メールアドレス"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full border rounded px-4 py-2"
+              className="w-full px-4 py-2 rounded-full border focus:outline-none focus:ring-2 focus:ring-green-300"
               required
             />
-
             {error && (
-              <div className="text-red-600 text-sm">
-                {error}
-              </div>
+              <p className="text-red-500 text-sm text-center">{error}</p>
             )}
-
             <button
               type="submit"
-              disabled={loading || !email}
-              className="w-full bg-sky-500 text-white py-2 rounded font-bold disabled:opacity-50"
+              disabled={loading}
+              className="w-full bg-green-400 hover:bg-green-500 text-white font-bold py-2 rounded-full transition disabled:opacity-50"
             >
               {loading ? "送信中…" : "ログインリンクを送る"}
             </button>
           </form>
         )}
       </div>
-    </main>
+    </div>
   );
 }
