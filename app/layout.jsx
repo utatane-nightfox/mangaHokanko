@@ -9,14 +9,14 @@ export default async function RootLayout({ children }) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // 🔐 未ログインは強制ログイン画面へ
+  // 🔐 未ログインなら強制ログイン
   if (!user) {
     redirect("/login");
   }
 
   return (
     <html lang="ja">
-      <body className="bg-sky-50 min-h-screen">
+      <body>
         <Header />
         {children}
       </body>
