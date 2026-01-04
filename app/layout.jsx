@@ -1,19 +1,26 @@
+// app/layout.jsx
 import "./globals.css";
 import Header from "@/components/Header";
-import { supabaseServer } from "@/utils/supabase/server";
+import { createServerSupabase } from "@/utils/supabase/server";
+import { redirect } from "next/navigation";
 
 export default async function RootLayout({ children }) {
-  const supabase = supabaseServer();
+  const supabase = await createServerSupabase();
   const {
-    data: { session },
-  } = await supabase.auth.getSession();
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  // 🔒 未ログインならログイン画面へ強制
+  if (!user) {
+    redirect("/login");
+  }
 
   return (
     <html lang="ja">
-      <body className="bg-sky-50">
-        {/* ログイン中のみ Header 表示 */}
-        {session && <Header />}
-        <main className={session ? "pt-24" : ""}>{children}</main>
+      <body className="bg-sky-50 min-h-screen">
+        {/* ✅ ログイン中のみヘッダー表示 */}
+        <Header />
+        <main>{children}</main>
       </body>
     </html>
   );
