@@ -13,7 +13,6 @@ export default function AuthCallbackInner() {
       const code = params.get("code");
 
       if (!code) {
-        console.error("認証コードなし");
         router.replace("/login");
         return;
       }
@@ -27,7 +26,7 @@ export default function AuthCallbackInner() {
         return;
       }
 
-      // ✅ セッション確定後にトップへ
+      // ✅ セッション確定後、トップへ
       router.replace("/");
     };
 
