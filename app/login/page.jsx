@@ -3,12 +3,12 @@ import { useState } from "react";
 import { supabaseBrowser } from "@/utils/supabase/client";
 
 export default function LoginPage() {
-  const supabase = supabaseBrowser();
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
+  const supabase = supabaseBrowser();
 
-  const handleLogin = async (e) => {
+  const handleSend = async (e) => {
     e.preventDefault();
     setLoading(true);
     setMessage("");
@@ -16,49 +16,42 @@ export default function LoginPage() {
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: {
-        emailRedirectTo: `${location.origin}/callback`,
+        emailRedirectTo: `${location.origin}/auth/callback`,
       },
     });
 
     if (error) {
-      setMessage("ログインメールの送信に失敗しました");
+      setMessage("メール送信に失敗しました");
     } else {
-      setMessage("マジックリンクをメールで送信しました");
+      setMessage("マジックリンクをメールに送信しました");
     }
-
     setLoading(false);
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-sky-50">
-      <div className="bg-white p-10 rounded-2xl shadow-lg w-full max-w-md">
-        <h1 className="text-2xl font-bold text-center text-emerald-600 mb-6">
-          メールログイン
-        </h1>
-
-        <form onSubmit={handleLogin} className="space-y-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-sky-100 to-green-100">
+      <div className="bg-white p-8 rounded-xl shadow-md w-full max-w-md space-y-4">
+        <h2 className="text-xl font-bold text-center text-sky-700">
+          ログイン
+        </h2>
+        <form onSubmit={handleSend} className="space-y-4">
           <input
             type="email"
             placeholder="メールアドレス"
-            className="border p-3 w-full rounded"
-            value={email}
+            className="border p-2 w-full rounded"
             onChange={(e) => setEmail(e.target.value)}
             required
           />
-
           <button
             type="submit"
-            className="w-full bg-emerald-500 text-white py-3 rounded hover:bg-emerald-600"
+            className="bg-green-500 text-white w-full py-2 rounded"
             disabled={loading}
           >
-            {loading ? "送信中..." : "マジックリンクを送る"}
+            {loading ? "送信中..." : "マジックリンクを送信"}
           </button>
         </form>
-
         {message && (
-          <p className="mt-4 text-center text-sm text-gray-600">
-            {message}
-          </p>
+          <p className="text-center text-sm text-gray-600">{message}</p>
         )}
       </div>
     </div>
