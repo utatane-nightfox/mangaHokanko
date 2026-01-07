@@ -1,57 +1,53 @@
 "use client";
+
 import { useState } from "react";
 import { supabaseBrowser } from "@/utils/supabase/client";
 
 export default function LoginPage() {
-  const [email, setEmail] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState("");
   const supabase = supabaseBrowser();
+  const [email, setEmail] = useState("");
+  const [sent, setSent] = useState(false);
 
-  const handleSend = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setMessage("");
-
+  const sendMagicLink = async () => {
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: {
+        // ★ 重要：必ずここに戻す
         emailRedirectTo: `${location.origin}/auth/callback`,
       },
     });
 
-    if (error) {
-      setMessage("メール送信に失敗しました");
-    } else {
-      setMessage("マジックリンクをメールに送信しました");
-    }
-    setLoading(false);
+    if (!error) setSent(true);
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-sky-100 to-green-100">
-      <div className="bg-white p-8 rounded-xl shadow-md w-full max-w-md space-y-4">
-        <h2 className="text-xl font-bold text-center text-sky-700">
-          ログイン
-        </h2>
-        <form onSubmit={handleSend} className="space-y-4">
-          <input
-            type="email"
-            placeholder="メールアドレス"
-            className="border p-2 w-full rounded"
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
-          <button
-            type="submit"
-            className="bg-green-500 text-white w-full py-2 rounded"
-            disabled={loading}
-          >
-            {loading ? "送信中..." : "マジックリンクを送信"}
-          </button>
-        </form>
-        {message && (
-          <p className="text-center text-sm text-gray-600">{message}</p>
+    <div className="min-h-screen flex items-center justify-center bg-sky-50">
+      <div className="bg-white rounded-2xl p-8 shadow w-[360px]">
+        <h1 className="text-2xl font-bold mb-6 text-center">
+          メールログイン
+        </h1>
+
+        {sent ? (
+          <p className="text-center text-sm text-gray-600">
+            メールを送信しました。<br />
+            届いたリンクを開いてください。
+          </p>
+        ) : (
+          <>
+            <input
+              type="email"
+              className="w-full border rounded px-3 py-2 mb-4"
+              placeholder="メールアドレス"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+            <button
+              onClick={sendMagicLink}
+              className="w-full bg-emerald-400 text-white py-2 rounded hover:bg-emerald-500"
+            >
+              ログインリンクを送信
+            </button>
+          </>
         )}
       </div>
     </div>
