@@ -1,13 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import { supabaseBrowser } from "../../utils/supabase/client";
 
 export default function ListPage() {
-  const router = useRouter();
-  const supabase = supabaseBrowser();
-
+  const supabase = supabaseBrowser(); // ← ★必須
   const [list, setList] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -17,31 +14,25 @@ export default function ListPage() {
         data: { session },
       } = await supabase.auth.getSession();
 
-      // 未ログインはログインへ
       if (!session) {
-        router.replace("/login");
+        setLoading(false);
         return;
       }
 
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from("mangahokanko")
         .select("*")
         .eq("user_id", session.user.id)
         .order("created_at", { ascending: false });
 
-      if (!error) {
-        setList(data ?? []);
-      }
-
+      setList(data ?? []);
       setLoading(false);
     };
 
     load();
-  }, [router, supabase]);
+  }, [supabase]); // ← OK
 
-  if (loading) {
-    return <div className="p-6">読み込み中...</div>;
-  }
+  if (loading) return <div className="p-6">読み込み中...</div>;
 
   return (
     <div className="p-6 space-y-2">
