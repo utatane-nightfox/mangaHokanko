@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { supabaseBrowser } from "@/utils/supabase/client";
+import { createServerSupabase } from "../../utils/supabase/client";
 import { TITLE_DEFINITIONS, ICON_FRAMES } from "@/components/definitions";
 
 export default function ProfilePage() {

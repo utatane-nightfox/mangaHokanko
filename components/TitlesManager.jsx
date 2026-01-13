@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { supabaseBrowser } from "@/utils/supabase/client";
+import { createServerSupabase } from "../utils/supabase/client";
 import { TITLE_DEFINITIONS } from "./definitions";
 
 export default function TitlesManager() {

@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { supabaseBrowser } from "@/utils/supabase/client";
-import MangaTable from "@/components/MangaTable";
+import { createServerSupabase } from "../utils/supabase/client";
+import MangaTable from "../../components/MangaTable";
 
 export default function HomePage() {
   const supabase = supabaseBrowser();

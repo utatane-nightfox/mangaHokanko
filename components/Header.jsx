@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { supabaseBrowser } from "@/utils/supabase/client";
+import { createServerSupabase } from "../utils/supabase/client";
 
 export default function Header() {
   const supabase = supabaseBrowser();

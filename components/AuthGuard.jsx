@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { supabaseBrowser } from "@/utils/supabase/client";
+import { createServerSupabase } from "../utils/supabase/client";
 
 export default function AuthGuard({ children }) {
   const router = useRouter();

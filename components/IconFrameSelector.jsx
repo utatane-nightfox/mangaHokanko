@@ -1,7 +1,7 @@
 "use client";
 
 import { ICON_FRAMES } from "./iconFrames";
-import { supabaseBrowser } from "@/utils/supabase/client";
+import { createServerSupabase } from "../utils/supabase/client";
 
 export default function IconFrameSelector({ profile, setProfile }) {
   const supabase = supabaseBrowser();
