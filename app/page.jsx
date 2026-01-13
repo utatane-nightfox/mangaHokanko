@@ -6,7 +6,7 @@ import { supabaseBrowser } from "../utils/supabase/client";
 import MangaTable from "../components/MangaTable";
 
 export default function HomePage() {
-  const supabase = supabaseBrowser(); // ★これが必須
+  const supabase = supabaseBrowser();
   const router = useRouter();
 
   const [loading, setLoading] = useState(true);
@@ -43,7 +43,7 @@ export default function HomePage() {
     };
 
     load();
-  }, [router, supabase]);
+  }, [router]);
 
   if (loading) return <div className="p-10">読み込み中...</div>;
 
