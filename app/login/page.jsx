@@ -1,22 +1,31 @@
 "use client";
 
 import { useState } from "react";
-import { createServerSupabase } from "../../utils/supabase/client";
+import { supabaseBrowser } from "../../utils/supabase/client";
 
 export default function LoginPage() {
-    const [email, setEmail] = useState("");
+  const supabase = supabaseBrowser();
+
+  const [email, setEmail] = useState("");
   const [sent, setSent] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
 
   const sendMagicLink = async () => {
+    setErrorMsg("");
+
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: {
-        // ★ 重要：必ずここに戻す
         emailRedirectTo: `${location.origin}/auth/callback`,
       },
     });
 
-    if (!error) setSent(true);
+    if (error) {
+      console.error(error);
+      setErrorMsg(error.message);
+    } else {
+      setSent(true);
+    }
   };
 
   return (
@@ -40,6 +49,11 @@ export default function LoginPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
             />
+
+            {errorMsg && (
+              <p className="text-red-500 text-sm mb-2">{errorMsg}</p>
+            )}
+
             <button
               onClick={sendMagicLink}
               className="w-full bg-emerald-400 text-white py-2 rounded hover:bg-emerald-500"
