@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { createServerSupabase } from "../../utils/supabase/client";
-import MangaTable from "../../components/MangaTable";
+import MangaTable from "../components/MangaTable";
 
 export default function FavoritesPage() {
   const supabase = supabaseBrowser();
