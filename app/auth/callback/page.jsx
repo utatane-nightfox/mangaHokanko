@@ -1,10 +1,9 @@
-import { Suspense } from "react";
+"use client";
+
 import AuthCallbackInner from "./AuthCallbackInner";
 
+export const dynamic = "force-dynamic";
+
 export default function AuthCallbackPage() {
-  return (
-    <Suspense fallback={<div className="p-6">ログイン処理中…</div>}>
-      <AuthCallbackInner />
-    </Suspense>
-  );
+  return <AuthCallbackInner />;
 }

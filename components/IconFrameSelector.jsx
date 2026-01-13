@@ -4,8 +4,7 @@ import { ICON_FRAMES } from "./iconFrames";
 import { createServerSupabase } from "../utils/supabase/client";
 
 export default function IconFrameSelector({ profile, setProfile }) {
-  const supabase = supabaseBrowser();
-
+  
   const select = async (id) => {
     await supabase
       .from("profiles")

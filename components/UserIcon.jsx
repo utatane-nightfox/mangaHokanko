@@ -4,8 +4,7 @@ import { useEffect, useState } from "react";
 import { createServerSupabase } from "../utils/supabase/client";
 
 export default function UserIcon() {
-  const supabase = supabaseBrowser();
-  const [profile, setProfile] = useState(null);
+    const [profile, setProfile] = useState(null);
   const [open, setOpen] = useState(false);
 
   useEffect(() => {

@@ -6,8 +6,7 @@ import { useRouter } from "next/navigation";
 import { createServerSupabase } from "../utils/supabase/client";
 
 export default function Header() {
-  const supabase = supabaseBrowser();
-  const router = useRouter();
+    const router = useRouter();
 
   const [profile, setProfile] = useState(null);
   const [open, setOpen] = useState(false);

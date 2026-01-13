@@ -4,8 +4,7 @@ import { createServerSupabase } from "../utils/supabase/client";
 import { TITLE_DEFINITIONS } from "./definitions";
 
 export default function TitlesManager() {
-  const supabase = supabaseBrowser();
-  const [profile, setProfile] = useState(null);
+    const [profile, setProfile] = useState(null);
   const [newTitle, setNewTitle] = useState(null);
 
   useEffect(() => {

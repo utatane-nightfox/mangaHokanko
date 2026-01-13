@@ -4,8 +4,7 @@ import { useState } from "react";
 import { createServerSupabase } from "../../utils/supabase/client";
 
 export default function LoginPage() {
-  const supabase = supabaseBrowser();
-  const [email, setEmail] = useState("");
+    const [email, setEmail] = useState("");
   const [sent, setSent] = useState(false);
 
   const sendMagicLink = async () => {

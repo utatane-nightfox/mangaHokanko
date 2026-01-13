@@ -4,8 +4,7 @@ import { useState } from "react";
 import { createServerSupabase } from "../utils/supabase/client";
 
 export default function MangaTable({ mangas, reload }) {
-  const supabase = supabaseBrowser();
-  const [query, setQuery] = useState("");
+    const [query, setQuery] = useState("");
   const [sort, setSort] = useState("created_at");
 
   const filtered = mangas

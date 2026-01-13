@@ -10,8 +10,7 @@ export default function AuthGuard({ children }) {
 
   useEffect(() => {
     const check = async () => {
-      const supabase = supabaseBrowser();
-      const { data } = await supabase.auth.getUser();
+            const { data } = await supabase.auth.getUser();
 
       if (!data.user) {
         router.replace("/login");

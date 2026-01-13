@@ -1,11 +1,11 @@
 "use client";
 import { useEffect, useState } from "react";
 import { createServerSupabase } from "../../utils/supabase/client";
-import { TITLE_DEFINITIONS, ICON_FRAMES } from "../components/definitions";
+import { TITLE_DEFINITIONS, ICON_FRAMES } 
+  from "../../components/definitions";
 
 export default function ProfilePage() {
-  const supabase = supabaseBrowser();
-  const [user, setUser] = useState(null);
+    const [user, setUser] = useState(null);
   const [profile, setProfile] = useState(null);
   const [file, setFile] = useState(null);
   const [saving, setSaving] = useState(false);

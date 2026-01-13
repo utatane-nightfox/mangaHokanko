@@ -3,8 +3,7 @@ import { useState } from "react";
 import { createServerSupabase } from "../../utils/supabase/client";
 
 export default function RegisterPage() {
-  const supabase = supabaseBrowser();
-  const [title, setTitle] = useState("");
+    const [title, setTitle] = useState("");
   const [chapters, setChapters] = useState("");
 
   const save = async () => {
