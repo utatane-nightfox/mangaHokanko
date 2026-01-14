@@ -19,8 +19,7 @@ export default function FavoritesPage() {
         .from("mangas")
         .select("*")
         .eq("user_id", user.id)
-        .eq("favorite", true)
-        .order("created_at", { ascending: false });
+        .eq("favorite", true);
 
       setList(data || []);
       setLoading(false);
@@ -33,13 +32,10 @@ export default function FavoritesPage() {
 
   return (
     <MainLayout>
-      <main className="max-w-6xl mx-auto px-6 space-y-6">
-        <h1 className="text-xl font-bold">お気に入り</h1>
-
-        <section className="bg-white rounded-xl shadow p-4">
-          <MangaTable mangas={list} reload={() => location.reload()} />
-        </section>
-      </main>
+      <section className="bg-white rounded-xl shadow p-4">
+        <h1 className="text-xl font-bold mb-4">お気に入り</h1>
+        <MangaTable mangas={list} reload={() => location.reload()} />
+      </section>
     </MainLayout>
   );
 }

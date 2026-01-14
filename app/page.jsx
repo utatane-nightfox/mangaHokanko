@@ -44,36 +44,27 @@ export default function HomePage() {
     load();
   }, []);
 
-  const filtered = mangas.filter(m =>
-    m.title?.toLowerCase().includes(keyword.toLowerCase())
-  );
-
   if (loading) return <div className="p-10">読み込み中…</div>;
 
   return (
     <MainLayout>
-      <main className="max-w-6xl mx-auto px-6 space-y-6">
-        <section className="grid grid-cols-2 gap-4">
-          <div className="bg-white rounded-xl p-5 shadow">
-            総話数
-            <div className="text-2xl font-bold">
-              {profile?.total_chapters}
-            </div>
-          </div>
-          <div className="bg-white rounded-xl p-5 shadow">
-            登録作品数
-            <div className="text-2xl font-bold">
-              {profile?.total_registered}
-            </div>
-          </div>
-        </section>
+      {/* ステータス */}
+      <section className="grid grid-cols-2 gap-4">
+        <div className="bg-white rounded-xl p-5 shadow">
+          総話数
+          <div className="text-2xl font-bold">{profile?.total_chapters}</div>
+        </div>
+        <div className="bg-white rounded-xl p-5 shadow">
+          登録作品数
+          <div className="text-2xl font-bold">{profile?.total_registered}</div>
+        </div>
+      </section>
 
-        <SearchBar value={keyword} onChange={setKeyword} />
+      <SearchBar value={keyword} onChange={setKeyword} />
 
-        <section className="bg-white rounded-xl shadow p-4">
-          <MangaTable mangas={filtered} reload={() => location.reload()} />
-        </section>
-      </main>
+      <section className="bg-white rounded-xl shadow p-4">
+        <MangaTable mangas={mangas} reload={() => location.reload()} />
+      </section>
     </MainLayout>
   );
 }
