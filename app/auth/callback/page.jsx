@@ -11,14 +11,17 @@ export default function AuthCallbackPage() {
     const run = async () => {
       const supabase = supabaseBrowser();
 
-      // ★ これを呼ぶ「唯一の場所」
-      await supabase.auth.getSession();
+      // ★ これが超重要
+      await supabase.auth.exchangeCodeForSession(
+        window.location.href
+      );
 
+      // ★ code を完全に消した状態でトップへ
       router.replace("/");
     };
 
     run();
   }, [router]);
 
-  return <p className="p-6">ログイン処理中...</p>;
+  return <p className="p-10">ログイン処理中...</p>;
 }
