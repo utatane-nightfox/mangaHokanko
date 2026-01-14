@@ -15,16 +15,12 @@ export default function HomePage() {
 
   useEffect(() => {
     const load = async () => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
+      const { data: { user } } = await supabase.auth.getUser();
 
-      if (!session) {
+      if (!user) {
         router.replace("/login");
         return;
       }
-
-      const user = session.user;
 
       const { data: p } = await supabase
         .from("profiles")
