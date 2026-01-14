@@ -40,6 +40,7 @@ export default function HomePage() {
       setMangas(list || []);
       setLoading(false);
     };
+
     load();
   }, []);
 
@@ -52,7 +53,6 @@ export default function HomePage() {
   return (
     <MainLayout>
       <main className="max-w-6xl mx-auto px-6 space-y-6">
-        {/* ステータス */}
         <section className="grid grid-cols-2 gap-4">
           <div className="bg-white rounded-xl p-5 shadow">
             総話数
@@ -68,10 +68,8 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* 検索 */}
         <SearchBar value={keyword} onChange={setKeyword} />
 
-        {/* 一覧 */}
         <section className="bg-white rounded-xl shadow p-4">
           <MangaTable mangas={filtered} reload={() => location.reload()} />
         </section>
