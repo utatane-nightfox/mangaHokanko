@@ -15,37 +15,33 @@ export default function HomePage() {
 
   useEffect(() => {
     const load = async () => {
-      try {
-        // ✅ セッション確認は getUser() のみ
-        const {
-          data: { user },
-        } = await supabase.auth.getUser();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
 
-        if (!user) {
-          router.replace("/login");
-          return;
-        }
-
-        const { data: p } = await supabase
-          .from("profiles")
-          .select("*")
-          .eq("id", user.id)
-          .single();
-
-        setProfile(p);
-
-        const { data: list } = await supabase
-          .from("mangas")
-          .select("*")
-          .eq("user_id", user.id)
-          .order("created_at", { ascending: false });
-
-        setMangas(list || []);
-      } catch (e) {
-        console.error(e);
-      } finally {
-        setLoading(false);
+      if (!session) {
+        router.replace("/login");
+        return;
       }
+
+      const user = session.user;
+
+      const { data: p } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", user.id)
+        .single();
+
+      setProfile(p);
+
+      const { data: list } = await supabase
+        .from("mangas")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false });
+
+      setMangas(list || []);
+      setLoading(false);
     };
 
     load();
@@ -58,11 +54,11 @@ export default function HomePage() {
       <div className="flex gap-6">
         <div className="bg-white rounded-xl p-6 shadow">
           総話数<br />
-          <b className="text-2xl">{profile?.total_chapters ?? 0}</b>
+          <b className="text-2xl">{profile?.total_chapters}</b>
         </div>
         <div className="bg-white rounded-xl p-6 shadow">
           登録作品数<br />
-          <b className="text-2xl">{profile?.total_registered ?? 0}</b>
+          <b className="text-2xl">{profile?.total_registered}</b>
         </div>
       </div>
 
