@@ -10,11 +10,14 @@ export default function AuthCallbackPage() {
   useEffect(() => {
     const run = async () => {
       const supabase = supabaseBrowser();
+
+      // ★ ここ「だけ」で getSession
       await supabase.auth.getSession();
+
       router.replace("/");
     };
     run();
   }, [router]);
 
-  return null;
+  return <p>ログイン処理中...</p>;
 }

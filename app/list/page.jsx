@@ -4,17 +4,15 @@ import { useEffect, useState } from "react";
 import { supabaseBrowser } from "../../utils/supabase/client";
 
 export default function ListPage() {
-  const supabase = supabaseBrowser(); // ← ★必須
+  const supabase = supabaseBrowser();
   const [list, setList] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const load = async () => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
+      const { data: { user } } = await supabase.auth.getUser();
 
-      if (!session) {
+      if (!user) {
         setLoading(false);
         return;
       }
@@ -22,7 +20,7 @@ export default function ListPage() {
       const { data } = await supabase
         .from("mangahokanko")
         .select("*")
-        .eq("user_id", session.user.id)
+        .eq("user_id", user.id)
         .order("created_at", { ascending: false });
 
       setList(data ?? []);
@@ -30,7 +28,7 @@ export default function ListPage() {
     };
 
     load();
-  }, [supabase]); // ← OK
+  }, [supabase]);
 
   if (loading) return <div className="p-6">読み込み中...</div>;
 

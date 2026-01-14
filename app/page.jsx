@@ -15,19 +15,18 @@ export default function HomePage() {
 
   useEffect(() => {
     const load = async () => {
-      const { data } = await supabase.auth.getSession();
+      // ★ ここは getUser()
+      const { data: { user } } = await supabase.auth.getUser();
 
-      if (!data.session) {
+      if (!user) {
         router.replace("/login");
         return;
       }
 
-      const userId = data.session.user.id;
-
       const { data: p } = await supabase
         .from("profiles")
         .select("*")
-        .eq("id", userId)
+        .eq("id", user.id)
         .single();
 
       setProfile(p);
@@ -35,7 +34,7 @@ export default function HomePage() {
       const { data: list } = await supabase
         .from("mangas")
         .select("*")
-        .eq("user_id", userId)
+        .eq("user_id", user.id)
         .order("created_at", { ascending: false });
 
       setMangas(list || []);
@@ -43,7 +42,7 @@ export default function HomePage() {
     };
 
     load();
-  }, [router]);
+  }, [router, supabase]);
 
   if (loading) return <div className="p-10">読み込み中...</div>;
 
