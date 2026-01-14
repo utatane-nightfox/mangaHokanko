@@ -9,8 +9,12 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [sent, setSent] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const sendMagicLink = async () => {
+    if (loading) return;
+
+    setLoading(true);
     setErrorMsg("");
 
     const { error } = await supabase.auth.signInWithOtp({
@@ -23,6 +27,7 @@ export default function LoginPage() {
     if (error) {
       console.error(error);
       setErrorMsg(error.message);
+      setLoading(false);
     } else {
       setSent(true);
     }
@@ -56,7 +61,8 @@ export default function LoginPage() {
 
             <button
               onClick={sendMagicLink}
-              className="w-full bg-emerald-400 text-white py-2 rounded hover:bg-emerald-500"
+              disabled={loading}
+              className="w-full bg-emerald-400 text-white py-2 rounded hover:bg-emerald-500 disabled:opacity-50"
             >
               ログインリンクを送信
             </button>
