@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { supabaseBrowser } from "../utils/supabase/client";
 import MangaTable from "../components/MangaTable";
 import SearchBar from "../components/SearchBar";
-import MainLayout from "../components/layouts/MainLayout";
 
 export default function HomePage() {
   const supabase = supabaseBrowser();
@@ -29,15 +28,16 @@ export default function HomePage() {
         .select("*")
         .eq("id", user.id)
         .single();
+
       setProfile(p);
 
-      const { data: list } = await supabase
+      const { data } = await supabase
         .from("mangas")
         .select("*")
         .eq("user_id", user.id)
         .order("created_at", { ascending: false });
 
-      setMangas(list || []);
+      setMangas(data || []);
       setLoading(false);
     };
 
@@ -47,8 +47,7 @@ export default function HomePage() {
   if (loading) return <div className="p-10">読み込み中…</div>;
 
   return (
-    <MainLayout>
-      {/* ステータス */}
+    <main className="max-w-6xl mx-auto px-6 space-y-6">
       <section className="grid grid-cols-2 gap-4">
         <div className="bg-white rounded-xl p-5 shadow">
           総話数
@@ -65,6 +64,6 @@ export default function HomePage() {
       <section className="bg-white rounded-xl shadow p-4">
         <MangaTable mangas={mangas} reload={() => location.reload()} />
       </section>
-    </MainLayout>
+    </main>
   );
 }

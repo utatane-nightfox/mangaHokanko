@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { supabaseBrowser } from "../../utils/supabase/client";
 import MangaTable from "../../components/MangaTable";
-import MainLayout from "../../components/layouts/MainLayout";
 
 export default function FavoritesPage() {
   const supabase = supabaseBrowser();
@@ -24,18 +23,17 @@ export default function FavoritesPage() {
       setList(data || []);
       setLoading(false);
     };
-
     load();
   }, []);
 
   if (loading) return <div className="p-10">読み込み中…</div>;
 
   return (
-    <MainLayout>
+    <main className="max-w-6xl mx-auto px-6 space-y-6">
+      <h1 className="text-xl font-bold">お気に入り</h1>
       <section className="bg-white rounded-xl shadow p-4">
-        <h1 className="text-xl font-bold mb-4">お気に入り</h1>
         <MangaTable mangas={list} reload={() => location.reload()} />
       </section>
-    </MainLayout>
+    </main>
   );
 }
