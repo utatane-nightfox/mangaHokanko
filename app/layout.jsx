@@ -4,9 +4,9 @@ import Header from "../components/Header";
 export default function RootLayout({ children }) {
   return (
     <html lang="ja">
-      <body className="bg-sky-50 min-h-screen">
+      <body className="bg-sky-50 text-gray-800">
         <Header />
-        {children}
+        <div className="pt-20">{children}</div>
       </body>
     </html>
   );

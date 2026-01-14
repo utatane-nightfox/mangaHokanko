@@ -1,31 +1,38 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { createServerSupabase } from "../../utils/supabase/client";
+import { supabaseBrowser } from "../../utils/supabase/client";
 import MangaTable from "../../components/MangaTable";
-
+import MainLayout from "../../components/layouts/MainLayout";
 
 export default function FavoritesPage() {
-    const [list, setList] = useState([]);
-
-  const load = async () => {
-    const { data } = await supabase
-      .from("mangas")
-      .select("*")
-      .eq("favorite", true)
-      .order("created_at", { ascending: true });
-
-    setList(data || []);
-  };
+  const supabase = supabaseBrowser();
+  const [list, setList] = useState([]);
 
   useEffect(() => {
+    const load = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data } = await supabase
+        .from("mangas")
+        .select("*")
+        .eq("user_id", user.id)
+        .eq("favorite", true);
+
+      setList(data || []);
+    };
+
     load();
   }, []);
 
   return (
-    <main className="p-6">
-      <h1 className="text-xl font-bold mb-4">お気に入り</h1>
-      <MangaTable mangas={list} reload={load} />
-    </main>
+    <MainLayout>
+      <main className="max-w-6xl mx-auto px-6">
+        <section className="bg-white rounded-xl shadow p-4">
+          <MangaTable mangas={list} reload={() => location.reload()} />
+        </section>
+      </main>
+    </MainLayout>
   );
 }
