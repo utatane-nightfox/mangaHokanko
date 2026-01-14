@@ -11,15 +11,15 @@ export default function AuthCallbackPage() {
     const run = async () => {
       const supabase = supabaseBrowser();
 
-      // ✅ ここでセッションを確定させる（1回だけ）
+      // ★ これだけでOK（セッション確定用）
       await supabase.auth.getSession();
 
-      // ✅ code を消してトップへ
+      // ★ 必ずトップへ
       router.replace("/");
     };
 
     run();
   }, [router]);
 
-  return <p className="p-6">ログイン処理中...</p>;
+  return null;
 }
