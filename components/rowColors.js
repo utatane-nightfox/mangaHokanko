@@ -1,14 +1,16 @@
-// components/rowColors.js
-
 export const ROW_COLORS = [
-  { id: "row-red",    label: "赤",    class: "bg-red-50 border-red-300" },
-  { id: "row-pink",   label: "ピンク", class: "bg-pink-50 border-pink-300" },
-  { id: "row-purple", label: "紫",    class: "bg-purple-50 border-purple-300" },
-  { id: "row-blue",   label: "青",    class: "bg-blue-50 border-blue-300" },
-  { id: "row-cyan",   label: "水色",  class: "bg-cyan-50 border-cyan-300" },
-  { id: "row-green",  label: "緑",    class: "bg-green-50 border-green-300" },
-  { id: "row-lime",   label: "黄緑",  class: "bg-lime-50 border-lime-300" },
-  { id: "row-yellow", label: "黄色",  class: "bg-yellow-50 border-yellow-300" },
-  { id: "row-orange", label: "橙",    class: "bg-orange-50 border-orange-300" },
-  { id: "row-gray",   label: "グレー", class: "bg-gray-50 border-gray-300" },
+  { key: "red", label: "赤", class: "border-red-400" },
+  { key: "orange", label: "橙", class: "border-orange-400" },
+  { key: "yellow", label: "黄", class: "border-yellow-400" },
+  { key: "green", label: "緑", class: "border-green-400" },
+  { key: "teal", label: "青緑", class: "border-teal-400" },
+  { key: "blue", label: "青", class: "border-blue-400" },
+  { key: "indigo", label: "藍", class: "border-indigo-400" },
+  { key: "purple", label: "紫", class: "border-purple-400" },
+  { key: "pink", label: "桃", class: "border-pink-400" },
+  { key: "gray", label: "灰", class: "border-gray-400" },
 ];
+
+export const ROW_COLOR_MAP = Object.fromEntries(
+  ROW_COLORS.map(c => [c.key, c.class])
+);

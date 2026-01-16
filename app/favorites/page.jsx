@@ -31,7 +31,7 @@ export default function FavoritesPage() {
   return (
     <main className="max-w-6xl mx-auto px-6 space-y-6">
       <h1 className="text-xl font-bold">お気に入り</h1>
-      <section className="bg-white rounded-xl shadow p-4">
+      <section className="rounded-2xl bg-gradient-to-br from-white to-sky-50 shadow-lg p-6">
         <MangaTable mangas={list} reload={() => location.reload()} />
       </section>
     </main>
