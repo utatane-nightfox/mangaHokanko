@@ -12,7 +12,7 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
 
   const sendMagicLink = async () => {
-    if (loading) return;
+    if (loading || !email) return;
 
     setLoading(true);
     setErrorMsg("");
@@ -30,6 +30,7 @@ export default function LoginPage() {
       setLoading(false);
     } else {
       setSent(true);
+      // ★ 二度送信防止のため loading は解除しない
     }
   };
 
@@ -62,7 +63,7 @@ export default function LoginPage() {
             <button
               onClick={sendMagicLink}
               disabled={loading}
-              className="w-full bg-emerald-400 text-white py-2 rounded hover:bg-emerald-500 disabled:opacity-50"
+              className="w-full bg-emerald-500 text-white py-2 rounded hover:bg-emerald-600 disabled:opacity-50"
             >
               ログインリンクを送信
             </button>
