@@ -1,5 +1,4 @@
 "use client";
-
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabaseBrowser } from "../../utils/supabase/client";
@@ -13,11 +12,13 @@ export default function FavoritesPage() {
 
   useEffect(() => {
     const load = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
         router.replace("/login");
         return;
       }
+
+      const user = session.user;
 
       const { data } = await supabase
         .from("mangas")
@@ -26,18 +27,19 @@ export default function FavoritesPage() {
         .eq("favorite", true)
         .order("created_at", { ascending: false });
 
-      setList(data || []);
+      setList(data ?? []);
       setLoading(false);
     };
+
     load();
-  }, []);
+  }, [router, supabase]);
 
   if (loading) return <div className="p-10">読み込み中…</div>;
 
   return (
-    <main className="max-w-6xl mx-auto px-6 space-y-6">
+    <main className="space-y-6">
       <h1 className="text-xl font-bold">お気に入り</h1>
-      <section className="rounded-2xl bg-gradient-to-br from-white to-sky-50 shadow-lg p-6">
+      <section className="bg-gradient-to-br from-white to-sky-50 rounded-2xl shadow-lg p-6">
         <MangaTable mangas={list} reload={() => location.reload()} />
       </section>
     </main>

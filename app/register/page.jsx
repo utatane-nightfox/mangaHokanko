@@ -1,5 +1,4 @@
 "use client";
-
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabaseBrowser } from "../../utils/supabase/client";
@@ -11,25 +10,23 @@ export default function RegisterPage() {
   const [chapters, setChapters] = useState("");
 
   const save = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
       router.replace("/login");
       return;
     }
 
     await supabase.from("mangas").insert({
-      user_id: user.id,
+      user_id: session.user.id,
       title,
       chapters: Number(chapters),
     });
 
-    setTitle("");
-    setChapters("");
     router.replace("/");
   };
 
   return (
-    <main className="max-w-xl mx-auto px-6">
+    <main className="max-w-xl mx-auto">
       <div className="bg-white p-8 rounded-xl shadow space-y-4">
         <h1 className="text-xl font-bold">作品登録</h1>
 

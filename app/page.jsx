@@ -1,5 +1,4 @@
 "use client";
-
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabaseBrowser } from "../utils/supabase/client";
@@ -17,25 +16,20 @@ export default function HomePage() {
 
   useEffect(() => {
     const load = async () => {
-      // 🔴 ここが最重要
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
-      // 未ログインならログイン画面へ
-      if (!user) {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
         router.replace("/login");
         return;
       }
 
-      // プロフィール取得
+      const user = session.user;
+
       const { data: p } = await supabase
         .from("profiles")
         .select("*")
         .eq("id", user.id)
         .single();
 
-      // 漫画一覧取得
       const { data } = await supabase
         .from("mangas")
         .select("*")
@@ -50,14 +44,14 @@ export default function HomePage() {
     load();
   }, [router, supabase]);
 
-  const filtered = mangas.filter((m) =>
+  const filtered = mangas.filter(m =>
     m.title?.toLowerCase().includes(keyword.toLowerCase())
   );
 
   if (loading) return <div className="p-10">読み込み中…</div>;
 
   return (
-    <main className="max-w-6xl mx-auto px-6 space-y-8">
+    <main className="space-y-8">
       <section className="grid grid-cols-2 gap-6">
         <div className="bg-white rounded-2xl p-6 shadow">
           総話数
@@ -65,7 +59,6 @@ export default function HomePage() {
             {profile?.total_chapters ?? 0}
           </div>
         </div>
-
         <div className="bg-white rounded-2xl p-6 shadow">
           登録作品数
           <div className="text-3xl font-bold text-emerald-600">
