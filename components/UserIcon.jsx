@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { createServerSupabase } from "../utils/supabase/client";
+import { supabaseBrowser } from "../utils/supabase/client";
 
 export default function UserIcon() {
-    const [profile, setProfile] = useState(null);
+  const supabase = supabaseBrowser();
+  const [profile, setProfile] = useState(null);
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
@@ -29,7 +30,7 @@ export default function UserIcon() {
     <div className="relative">
       <button onClick={() => setOpen(!open)}>
         <img
-          src={`${profile.avatar_url || "/avatar.png"}?t=${Date.now()}`}
+          src={profile.avatar_url || "/avatar.png"}
           className="w-12 h-12 rounded-full border-2 border-white shadow"
         />
       </button>

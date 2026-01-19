@@ -17,18 +17,25 @@ export default function HomePage() {
 
   useEffect(() => {
     const load = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
+      // 🔴 ここが最重要
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      // 未ログインならログイン画面へ
       if (!user) {
         router.replace("/login");
         return;
       }
 
+      // プロフィール取得
       const { data: p } = await supabase
         .from("profiles")
         .select("*")
         .eq("id", user.id)
         .single();
 
+      // 漫画一覧取得
       const { data } = await supabase
         .from("mangas")
         .select("*")
@@ -36,14 +43,14 @@ export default function HomePage() {
         .order("created_at", { ascending: false });
 
       setProfile(p);
-      setMangas(data || []);
+      setMangas(data ?? []);
       setLoading(false);
     };
 
     load();
-  }, []);
+  }, [router, supabase]);
 
-  const filtered = mangas.filter(m =>
+  const filtered = mangas.filter((m) =>
     m.title?.toLowerCase().includes(keyword.toLowerCase())
   );
 
@@ -58,6 +65,7 @@ export default function HomePage() {
             {profile?.total_chapters ?? 0}
           </div>
         </div>
+
         <div className="bg-white rounded-2xl p-6 shadow">
           登録作品数
           <div className="text-3xl font-bold text-emerald-600">

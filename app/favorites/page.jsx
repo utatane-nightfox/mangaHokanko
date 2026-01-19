@@ -1,24 +1,30 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { supabaseBrowser } from "../../utils/supabase/client";
 import MangaTable from "../../components/MangaTable";
 
 export default function FavoritesPage() {
   const supabase = supabaseBrowser();
+  const router = useRouter();
   const [list, setList] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const load = async () => {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      if (!user) {
+        router.replace("/login");
+        return;
+      }
 
       const { data } = await supabase
         .from("mangas")
         .select("*")
         .eq("user_id", user.id)
-        .eq("favorite", true);
+        .eq("favorite", true)
+        .order("created_at", { ascending: false });
 
       setList(data || []);
       setLoading(false);
