@@ -11,12 +11,23 @@ export default function AuthCallbackPage() {
     const run = async () => {
       const supabase = supabaseBrowser();
 
-      // ★ これが超重要
+      // ✅ まず現在のセッションを確認
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      // すでにログイン済みなら何もしないでトップへ
+      if (session) {
+        router.replace("/");
+        return;
+      }
+
+      // 🔽 まだセッションが無いときだけ code を交換
       await supabase.auth.exchangeCodeForSession(
         window.location.href
       );
 
-      // ★ code を完全に消した状態でトップへ
+      // 🔽 code を消した状態でトップへ
       router.replace("/");
     };
 
