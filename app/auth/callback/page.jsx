@@ -11,9 +11,9 @@ export default function AuthCallbackPage() {
     const run = async () => {
       const supabase = supabaseBrowser();
 
-      const { error } = await supabase.auth.exchangeCodeForSession(
-        window.location.href
-      );
+      // ✅ v2 正解：引数なし
+      const { data, error } =
+        await supabase.auth.exchangeCodeForSession();
 
       if (error) {
         console.error("exchange error", error);
@@ -21,8 +21,8 @@ export default function AuthCallbackPage() {
         return;
       }
 
-      // ★ セッションが確実に入るのを待つ
-      await new Promise((r) => setTimeout(r, 300));
+      // ✅ セッション保存を確実に待つ
+      await new Promise((r) => setTimeout(r, 500));
 
       router.replace("/");
     };

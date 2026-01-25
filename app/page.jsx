@@ -1,4 +1,5 @@
 "use client";
+
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabaseBrowser } from "../utils/supabase/client";
@@ -16,8 +17,13 @@ export default function HomePage() {
 
   useEffect(() => {
     const load = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      // ✅ セッションがまだ来てないだけの可能性を考慮
       if (!session) {
+        setLoading(false);
         router.replace("/login");
         return;
       }
@@ -44,10 +50,6 @@ export default function HomePage() {
     load();
   }, [router, supabase]);
 
-  const filtered = mangas.filter(m =>
-    m.title?.toLowerCase().includes(keyword.toLowerCase())
-  );
-
   if (loading) return <div className="p-10">読み込み中…</div>;
 
   return (
@@ -70,7 +72,7 @@ export default function HomePage() {
       <SearchBar value={keyword} onChange={setKeyword} />
 
       <section className="bg-gradient-to-br from-white to-sky-50 rounded-2xl shadow-lg p-6">
-        <MangaTable mangas={filtered} reload={() => location.reload()} />
+        <MangaTable mangas={mangas} reload={() => location.reload()} />
       </section>
     </main>
   );
