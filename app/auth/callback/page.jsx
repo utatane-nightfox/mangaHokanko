@@ -11,26 +11,16 @@ export default function AuthCallbackPage() {
     const run = async () => {
       const supabase = supabaseBrowser();
 
-      // URL に code がないなら即ログインへ
-      const url = new URL(window.location.href);
-      const code = url.searchParams.get("code");
+      // 🔴 交換処理はしない！
+      const { data: { session } } = await supabase.auth.getSession();
 
-      if (!code) {
+      if (!session) {
+        // セッションが無ければログインへ
         router.replace("/login");
         return;
       }
 
-      const { error } = await supabase.auth.exchangeCodeForSession(
-        window.location.href
-      );
-
-      if (error) {
-        console.error("exchange error", error);
-        router.replace("/login");
-        return;
-      }
-
-      // ★ code を消してからトップへ
+      // 正常ログイン
       router.replace("/");
     };
 
