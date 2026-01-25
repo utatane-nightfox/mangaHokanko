@@ -11,9 +11,18 @@ export default function AuthCallbackPage() {
     const run = async () => {
       const supabase = supabaseBrowser();
 
-      // ✅ v2 正解：引数なし
-      const { data, error } =
-        await supabase.auth.exchangeCodeForSession();
+      // 🔴 URL から code を安全に取得
+      const url = new URL(window.location.href);
+      const code = url.searchParams.get("code");
+
+      // 🔴 code が無いなら何もしない（超重要）
+      if (!code) {
+        router.replace("/login");
+        return;
+      }
+
+      // 🔴 code がある時だけ exchange
+      const { error } = await supabase.auth.exchangeCodeForSession(code);
 
       if (error) {
         console.error("exchange error", error);
@@ -21,8 +30,8 @@ export default function AuthCallbackPage() {
         return;
       }
 
-      // ✅ セッション保存を確実に待つ
-      await new Promise((r) => setTimeout(r, 500));
+      // セッション安定待ち
+      await new Promise((r) => setTimeout(r, 300));
 
       router.replace("/");
     };
