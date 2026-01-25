@@ -11,18 +11,18 @@ export default function AuthCallbackPage() {
     const run = async () => {
       const supabase = supabaseBrowser();
 
-      // 🔴 URL から code を安全に取得
+      // URL に code がないなら即ログインへ
       const url = new URL(window.location.href);
       const code = url.searchParams.get("code");
 
-      // 🔴 code が無いなら何もしない（超重要）
       if (!code) {
         router.replace("/login");
         return;
       }
 
-      // 🔴 code がある時だけ exchange
-      const { error } = await supabase.auth.exchangeCodeForSession(code);
+      const { error } = await supabase.auth.exchangeCodeForSession(
+        window.location.href
+      );
 
       if (error) {
         console.error("exchange error", error);
@@ -30,9 +30,7 @@ export default function AuthCallbackPage() {
         return;
       }
 
-      // セッション安定待ち
-      await new Promise((r) => setTimeout(r, 300));
-
+      // ★ code を消してからトップへ
       router.replace("/");
     };
 
